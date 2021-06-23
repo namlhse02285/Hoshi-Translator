@@ -100,8 +100,8 @@ namespace Hoshi_Translator
                     if (action.Equals("replacer"))
                     {
                         string inputDir = args[2];
-                        string filterRegex = args[3];
-                        Encoding encoding = BuCommon.getEncodingFromString(args[4]);
+                        Encoding encoding = BuCommon.getEncodingFromString(args[3]);
+                        string filterRegex = args[4];
                         string outputDir = args[5];
                         string ruleFile = AppConst.REPLACE_FILE;
                         if (args.Length > 6)
@@ -462,6 +462,12 @@ namespace Hoshi_Translator
                         string inputFile = args[2];
                         string outputDir = args[3];
                         siglusProcessor.simpleExport(inputFile, outputDir);
+                    }
+                    if (action.Equals("ss_wrap"))
+                    {
+                        string inputDir = args[2];
+                        string outputDir = args[3];
+                        siglusProcessor.ssWrap(inputDir, outputDir);
                     }
                     break;
                 case "tyrano":

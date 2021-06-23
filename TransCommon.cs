@@ -178,6 +178,33 @@ namespace Hoshi_Translator
             }
         }
 
+        public static string formatJpSentence(string input, string example)
+        {
+            string addToHead = "";
+            string addToTail = "";
+
+            if(example== null)
+            {
+                if (input.StartsWith("「") && !input.EndsWith("」")) { addToTail = "」"; }
+                if (!input.StartsWith("「") && input.EndsWith("」")) { addToHead = "「"; }
+                if (input.StartsWith("『") && !input.EndsWith("』")) { addToTail = "』"; }
+                if (!input.StartsWith("『") && input.EndsWith("』")) { addToHead = "『"; }
+                if (input.StartsWith("（") && !input.EndsWith("）")) { addToTail = "）"; }
+                if (!input.StartsWith("（") && input.EndsWith("）")) { addToHead = "（"; }
+            }
+            else
+            {
+                if (example.StartsWith("「") && !input.StartsWith("「")) { addToHead = "「"; }
+                if (example.StartsWith("『") && !input.StartsWith("『")) { addToHead = "『"; }
+                if (example.StartsWith("（") && !input.StartsWith("（")) { addToHead = "（"; }
+                if (example.EndsWith("」") && !input.EndsWith("」")) { addToTail = "」"; }
+                if (example.EndsWith("』") && !input.EndsWith("』")) { addToTail = "』"; }
+                if (example.EndsWith("）") && !input.EndsWith("）")) { addToTail = "）"; }
+            }
+
+            return addToHead+ input + addToTail;
+        }
+
 
     }
 }

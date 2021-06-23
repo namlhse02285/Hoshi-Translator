@@ -16,7 +16,7 @@ namespace Hoshi_Translator.PjProcessor
             aMediateEncoding = BuCommon.getEncodingFromString("utf-8-bom");
             aOutputEncoding = BuCommon.getEncodingFromString("utf-8-bom");
             aWrapFont = new Font("MotoyaLMaru", 16);
-            aMaxWrap = 63;
+            aMaxWrap = 700;
             aWrapString = "\\n";
             base.loadDefault(forceReload);
         }
@@ -73,6 +73,29 @@ namespace Hoshi_Translator.PjProcessor
                     String outputFile = outputDir + "\\" + Path.GetFileName(filePath);
                     File.WriteAllText(outputFile, output, aMediateEncoding);
                 }
+            }
+        }
+
+        public void ssWrap(string inputFile, string outputDir)
+        {
+            Directory.CreateDirectory(outputDir);
+            foreach (string filePath in BuCommon.listFiles(inputFile))
+            {
+                string[] fileContent = File.ReadAllLines(filePath, aMediateEncoding);
+                Match tempMatch;
+                for (int i = 0; i < fileContent.Length; i++)
+                {
+                    tempMatch = Regex.Match(fileContent[i], @"^<\d+?> ");
+                    if (!tempMatch.Success) { continue; }
+                    string lineHead = tempMatch.Value;
+                    string sentence = fileContent[i].Substring(lineHead.Length);
+                    sentence = TransCommon.formatJpSentence(sentence,
+                        fileContent[i- 1].Substring(lineHead.Length+ 2));
+                    sentence = textSizeWrap(sentence, aWrapFont, aMaxWrap, aWrapString, out _);
+                    fileContent[i] = lineHead + sentence;
+                }
+                string outputFilePath = String.Format("{0}\\{1}", outputDir, Path.GetFileName(filePath));
+                File.WriteAllLines(outputFilePath, fileContent, aMediateEncoding);
             }
         }
 
