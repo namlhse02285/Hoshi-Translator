@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31229.75
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hoshi Translator", "Hoshi Translator.csproj", "{B5B11BFD-D0B9-4C72-8EBA-1A4AF4743021}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B5B11BFD-D0B9-4C72-8EBA-1A4AF4743021}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5B11BFD-D0B9-4C72-8EBA-1A4AF4743021}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5B11BFD-D0B9-4C72-8EBA-1A4AF4743021}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5B11BFD-D0B9-4C72-8EBA-1A4AF4743021}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5EE6F18A-FFDB-4A59-B439-F2A8E3BA209A}
+	EndGlobalSection
+EndGlobal

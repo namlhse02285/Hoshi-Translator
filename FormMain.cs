@@ -1,0 +1,529 @@
+﻿using Hoshi_Translator.PjProcessor;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Windows.Forms;
+
+namespace Hoshi_Translator
+{
+    public partial class FormMain : Form
+    {
+        public enum EXECUTION_STATE : uint
+        {
+            ES_AWAYMODE_REQUIRED = 0x00000040,
+            ES_CONTINUOUS = 0x80000000,
+            ES_DISPLAY_REQUIRED = 0x00000002,
+            ES_SYSTEM_REQUIRED = 0x00000001
+        }
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        static extern EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags);
+        public FormMain()
+        {
+            InitializeComponent();
+            SetThreadExecutionState(EXECUTION_STATE.ES_CONTINUOUS | EXECUTION_STATE.ES_SYSTEM_REQUIRED);
+
+            if (AppProp.getIntProp(AppProp.APP_LOCATION_X) != Int32.MinValue)
+            {
+                Location = new Point(AppProp.getIntProp(AppProp.APP_LOCATION_X),
+                    AppProp.getIntProp(AppProp.APP_LOCATION_Y));
+                this.Size = new Size(AppProp.getIntProp(AppProp.INIT_SIZE_X),
+                    AppProp.getIntProp(AppProp.INIT_SIZE_Y));
+            }
+            this.ResizeEnd += new EventHandler(frmMain_resizeEnd);
+
+            ControlFunc.initTextBoxDropFile(tbxCommand);
+            ControlFunc.implementTextBoxShortcut(tbxCommand);
+
+            tbxCommand.Text = AppProp.getProp(AppProp.LAST_COMMAND);
+            tbxCommand.SelectAll();
+        }
+        private void frmMain_resizeEnd(Object sender, EventArgs e)
+        {
+            AppProp.saveProp(AppProp.APP_LOCATION_X, this.Location.X.ToString());
+            AppProp.saveProp(AppProp.APP_LOCATION_Y, this.Location.Y.ToString());
+            AppProp.saveProp(AppProp.INIT_SIZE_X, this.Size.Width.ToString());
+            AppProp.saveProp(AppProp.INIT_SIZE_Y, this.Size.Height.ToString());
+        }
+
+        private void executeCmd_Click(object sender, EventArgs e)
+        {
+            this.WindowState = FormWindowState.Minimized;
+            saveProperty();
+            string[] commandArr = tbxCommand.Text.Split(new String[] { Environment.NewLine }, StringSplitOptions.None);
+            List<string> oneCommand = new List<string>();
+            foreach(string commandLine in commandArr)
+            {
+                if(commandLine.Length== 0)
+                {
+                    if(oneCommand.Count> 0)
+                    {
+                        runCommand(oneCommand.ToArray());
+                    }
+                    oneCommand.Clear();
+                }
+                else
+                {
+                    oneCommand.Add(commandLine);
+                }
+            }
+            if(oneCommand.Count> 0)
+            {
+                runCommand(oneCommand.ToArray());
+            }
+            this.WindowState = FormWindowState.Normal;
+            FlashWindow.Flash(this, 1);
+            MessageBox.Show("Commands executed.");
+        }
+        private void runCommand(string[] args)
+        {
+            string pjName = args[0].Trim();
+            string action = args[1].Trim();
+
+            switch (pjName)
+            {
+                case "common":
+                    if (action.Equals("test"))
+                    {
+                        string t1 = "<0006> 「……とっておきのおまじないを教えてあげましょう」";
+                        string reg = @"^<\d+>";
+                        MessageBox.Show(Regex.IsMatch(t1, reg).ToString());
+                        MessageBox.Show(String.Format("[\"{0}\"]", "aaa"));
+                    }
+                    if (action.Equals("replacer"))
+                    {
+                        string inputDir = args[2];
+                        string filterRegex = args[3];
+                        Encoding encoding = BuCommon.getEncodingFromString(args[4]);
+                        string outputDir = args[5];
+                        string ruleFile = AppConst.REPLACE_FILE;
+                        if (args.Length > 6)
+                        {
+                            ruleFile = args[6];
+                        }
+                        Directory.CreateDirectory(outputDir);
+                        List<KeyValuePair<string, string>> relaceList
+                            = BuCommon.getReplaceList(ruleFile, AppConst.REPLACE_SEPARATOR);
+
+                        foreach (string oneFilePath in BuCommon.listFiles(inputDir))
+                        {
+                            string[] fileContent = File.ReadAllLines(oneFilePath, encoding);
+
+                            for (int i = 0; i < fileContent.Length; i++)
+                            {
+                                Match regexMatch = Regex.Match(fileContent[i], filterRegex);
+                                if(regexMatch.Success)
+                                {
+                                    string lineContent = fileContent[i];
+                                    for (int j = 0; j < relaceList.Count; j++)
+                                    {
+                                        lineContent = lineContent.Replace(relaceList[j].Key, relaceList[j].Value);
+                                    }
+                                    fileContent[i] = lineContent;
+                                }
+                            }
+
+                            String outputFile = outputDir + "\\" + Path.GetFileName(oneFilePath);
+                            File.WriteAllLines(outputFile, fileContent, encoding);
+                        }
+                    }
+                    if (action.Equals("remove_org_text"))
+                    {
+                        string inputDir = args[2];
+                        string outputDir = args[3];
+                        Directory.CreateDirectory(outputDir);
+                        Encoding encoding = BuCommon.getEncodingFromString("utf-8");
+                        foreach (string filePath in BuCommon.listFiles(inputDir, "*.*"))
+                        {
+                            string fileNewContent = "";
+                            foreach (string aLine in File.ReadAllLines(filePath))
+                            {
+                                if (!aLine.StartsWith(TransCommon.ORIGINAL_LINE_HEAD))
+                                {
+                                    fileNewContent += aLine + Environment.NewLine;
+                                }
+                            }
+                            string outputPath = String.Format("{0}\\{1}"
+                                , outputDir, Path.GetFileName(filePath));
+                            File.WriteAllText(outputPath, fileNewContent, encoding);
+                        }
+                    }
+                    if (action.Equals("splittosize"))
+                    {
+                        string inputDir = args[2];
+                        string outputDir = args[3];
+                        long partSize = long.Parse(args[4]);
+                        string partName = args[5];
+
+                        long sizeCount = 0;
+                        int partCount = 1;
+
+                        foreach (string filePath in BuCommon.listFiles(inputDir))
+                        {
+                            FileInfo fileInfo = new FileInfo(filePath);
+                            sizeCount += fileInfo.Length;
+                            if (sizeCount >= partSize)
+                            {
+                                sizeCount = fileInfo.Length;
+                                partCount++;
+                            }
+                            String newFilePath = String.Format("{0}\\{1}_part{2}{3}",
+                                outputDir, partName, partCount, filePath.Substring(inputDir.Length));
+                            if (!Directory.Exists(Path.GetDirectoryName(newFilePath)))
+                            {
+                                Directory.CreateDirectory(Path.GetDirectoryName(newFilePath));
+                            }
+                            File.Copy(filePath, newFilePath, true);
+                        }
+                    }
+                    if (action.Equals("property_and_text_filter"))
+                    {
+                        string inputFile = args[2];
+                        Encoding encoding = BuCommon.getEncodingFromString(args[3]);
+                        string propName = args[4];
+                        string expressionString = args[5];
+                        bool isAccept = args[6].Equals("accept");
+                        string regexStr = args[7];
+                        string outputDir = args[8];
+                        TransCommon.propertyAndTextFilter(propName, expressionString,
+                            isAccept, regexStr, inputFile, encoding, outputDir);
+                    }
+                    break;
+                case "file":
+                    if (action.Equals("take_out"))
+                    {
+                        string inputDir = args[2];
+                        string outputDir = args[3];
+                        string separator = "(=)";
+
+                        foreach (string inputOneFile in BuCommon.listFiles(inputDir))
+                        {
+                            string newName = inputOneFile.Substring(inputDir.Length + 1);
+                            newName = newName.Replace("\\", separator);
+                            File.Move(inputOneFile, outputDir + "\\" + newName);
+                        }
+                    }
+                    if (action.Equals("put_in"))
+                    {
+                        string inputDir = args[2];
+                        string outputDir = args[3];
+                        string separator = "(=)";
+
+                        foreach (string inputOneFile in BuCommon.listFiles(inputDir))
+                        {
+                            string newName = inputOneFile.Substring(inputDir.Length + 1);
+                            newName = newName.Replace(separator, "\\");
+                            string newDir = Path.GetDirectoryName(outputDir + "\\" + newName);
+                            if (!Directory.Exists(newDir))
+                            {
+                                Directory.CreateDirectory(newDir);
+                            }
+                            File.Move(inputOneFile, outputDir + "\\" + newName);
+                        }
+                    }
+                    break;
+                case "girls_guild":
+                    RpgMVProcessor girlsGuildProcessor = new RpgMVProcessor();
+                    girlsGuildProcessor.loadDefault(true);
+                    if (action.Equals("concat"))
+                    {
+                        string inputDir = args[2];
+                        string outputDir = args[3];
+
+                        int argsDelta = 1;
+                        List<string> patternList = new List<string>();
+                        while (3 + argsDelta < args.Length && args[3 + argsDelta].Length > 0)
+                        {
+                            patternList.Add(@args[3 + argsDelta]);
+                            argsDelta++;
+                        }
+                        girlsGuildProcessor.girlsGuildConcat(inputDir, outputDir, patternList.ToArray());
+                    }
+                    break;
+                case "rpg_mv":
+                    RpgMVProcessor rpgMVProcessor = new RpgMVProcessor();
+                    rpgMVProcessor.loadDefault(true);
+                    if (action.Equals("export"))
+                    {
+                        string inputDir = args[2];
+                        string outputDir = args[3];
+                        string codeFilter = args[4];
+                        rpgMVProcessor.export(inputDir, outputDir, codeFilter);
+                    }
+                    if (action.Equals("filter_for_code"))
+                    {
+                        string code = args[2];
+                        string acceptOrIgnore = args[3];
+                        string regexStr = args[4];
+                        string inputFile = args[5];
+                        string outputDir = args[6];
+                        rpgMVProcessor.filterForCode(code, acceptOrIgnore.Equals("accept"), regexStr, inputFile, outputDir);
+                    }
+                    if (action.Equals("concat"))
+                    {
+                        string inputDir = args[2];
+                        string outputDir = args[3];
+
+                        int argsDelta = 1;
+                        List<string> patternList = new List<string>();
+                        while (3 + argsDelta < args.Length && args[3 + argsDelta].Length > 0)
+                        {
+                            patternList.Add(@args[3 + argsDelta]);
+                            argsDelta++;
+                        }
+                        rpgMVProcessor.concat(inputDir, outputDir, patternList.ToArray());
+                    }
+                    if (action.Equals("update"))
+                    {
+                        string fromDir = args[2];
+                        string toDir = args[3];
+                        string outputDir = args[4];
+                        rpgMVProcessor.update(fromDir, toDir, outputDir);
+                    }
+                    if (action.Equals("wrap"))
+                    {
+                        string inputDir = args[2];
+                        string outputDir = args[3];
+                        rpgMVProcessor.wrap(inputDir, outputDir);
+                    }
+                    if (action.Equals("import"))
+                    {
+                        string tranDir = args[2];
+                        string orgDir = args[3];
+                        string outputDir = args[4];
+                        Directory.CreateDirectory(outputDir);
+                        foreach (string oneTransFile in BuCommon.listFiles(tranDir))
+                        {
+                            String orgFilePath = orgDir + "\\" + Path.GetFileNameWithoutExtension(oneTransFile) + ".json";
+                            String outputFilePath = outputDir + "\\" + Path.GetFileNameWithoutExtension(oneTransFile) + ".json";
+                            rpgMVProcessor.importOneFile(oneTransFile, orgFilePath, outputFilePath);
+                        }
+                    }
+                    if (action.Equals("fill"))
+                    {
+                        string fillFilePath = args[2];
+                        string fullText = "";
+                        string transText = "";
+
+                        int argsDelta = 1;
+                        while (2 + argsDelta < args.Length && args[2 + argsDelta].Length > 0)
+                        {
+                            string lineText = args[2 + argsDelta];
+                            if (lineText.StartsWith(TransCommon.FULL_TEXT_BOX_LINE_HEAD))
+                            {
+                                fullText = lineText.Substring(TransCommon.FULL_TEXT_BOX_LINE_HEAD.Length);
+                            }
+                            if (lineText.StartsWith(TransCommon.TRANSLATED_LINE_HEAD))
+                            {
+                                transText = lineText.Substring(TransCommon.TRANSLATED_LINE_HEAD.Length);
+                            }
+                            if (!lineText.StartsWith("<"))
+                            {
+                                transText += Environment.NewLine + lineText;
+                            }
+                            argsDelta++;
+                        }
+
+                        rpgMVProcessor.fillDuplicate(fullText, transText, fillFilePath);
+                    }
+                    break;
+                case "rpg_vx_ace":
+                    RpgVxAceProcessor rpgVxAceProcessor = new RpgVxAceProcessor();
+                    rpgVxAceProcessor.loadDefault(true);
+                    if (action.Equals("export"))
+                    {
+                        string inputDir = args[2];
+                        string outputDir = args[3];
+                        string typeFilter = args[4];
+                        foreach (string filePath in BuCommon.listFiles(AppConst.RPGM_TRANS_DIR_, "*.rvdata2"))
+                        {
+                            File.Delete(filePath);
+                        }
+                        foreach (string filePath in BuCommon.listFiles(AppConst.RPGM_TRANS_DIR_, "*.json"))
+                        {
+                            File.Delete(filePath);
+                        }
+                        Directory.CreateDirectory(outputDir + "\\scripts");
+                        foreach (string filePath in BuCommon.listFiles(AppConst.RPGM_TRANS_DIR_ + "scripts", "*.*"))
+                        {
+                            File.Copy(filePath, outputDir + "\\scripts\\" + Path.GetFileName(filePath), true);
+                        }
+                        if (Directory.Exists(AppConst.RPGM_TRANS_DIR_ + "scripts"))
+                        {
+                            Directory.Delete(AppConst.RPGM_TRANS_DIR_ + "scripts", true);
+                        }
+                        foreach (string filePath in BuCommon.listFiles(inputDir))
+                        {
+                            File.Copy(filePath, AppConst.RPGM_TRANS_DIR_ + filePath.Substring(inputDir.Length + 1), true);
+                        }
+                        //ruby rmvxace_translator.rb --translate=*.rvdata2 --dest=H:\rpg_port_project\ParanormalSyndromeR\ParanormalSyndromeR\Data
+                        using (var proc = new Process())
+                        {
+                            var startInfo = new ProcessStartInfo(@"ruby");
+                            startInfo.WorkingDirectory = AppConst.RPGM_TRANS_DIR_;
+                            startInfo.Arguments = "rmvxace_translator.rb --dump=*.rvdata2";
+                            startInfo.UseShellExecute = false;
+                            startInfo.CreateNoWindow = false;
+                            proc.StartInfo = startInfo;
+                            proc.Start();
+                            proc.WaitForExit();
+                        }
+                        rpgVxAceProcessor.export(AppConst.RPGM_TRANS_DIR_, outputDir, typeFilter);
+                    }
+                    if (action.Equals("filter_for_type"))
+                    {
+                        string type = args[2];
+                        string acceptOrIgnore = args[3];
+                        string regexStr = args[4];
+                        string inputFile = args[5];
+                        string outputDir = args[6];
+                        rpgVxAceProcessor.filterForType(type, acceptOrIgnore.Equals("accept"), regexStr, inputFile, outputDir);
+                    }
+                    if (action.Equals("wrap"))
+                    {
+                        string inputDir = args[2];
+                        string outputDir = args[3];
+                        rpgVxAceProcessor.wrap(inputDir, outputDir);
+                    }
+                    if (action.Equals("import"))
+                    {
+                        string tranDir = args[2];
+                        string outputDir = args[3];
+                        Directory.CreateDirectory(outputDir);
+                        foreach (string filePath in BuCommon.listFiles(tranDir))
+                        {
+                            string orgFile = String.Format("{0}{1}.json",
+                                AppConst.RPGM_TRANS_DIR_, Path.GetFileNameWithoutExtension(filePath));
+                            rpgVxAceProcessor.importOneFile(filePath, orgFile);
+                        }
+                        using (var proc = new Process())
+                        {
+                            var startInfo = new ProcessStartInfo(@"ruby");
+                            startInfo.WorkingDirectory = AppConst.RPGM_TRANS_DIR_;
+                            startInfo.Arguments = "rmvxace_translator.rb --translate=*.rvdata2 --dest="+ outputDir;
+                            startInfo.UseShellExecute = false;
+                            startInfo.CreateNoWindow = false;
+                            proc.StartInfo = startInfo;
+                            proc.Start();
+                            proc.WaitForExit();
+                        }
+                    }
+                    break;
+                case "katawa":
+                    if (action.Equals("quote_fix"))
+                    {
+                        string input = args[2];
+                        string output = args[3];
+                        Encoding encoding = BuCommon.getEncodingFromString("utf-8");
+                        string[] inputs = File.ReadAllLines(input, encoding);
+
+                        for (int i = 0; i < inputs.Length; i++)
+                        {
+                            if (inputs[i].StartsWith("<trans_text>"))
+                            {
+                                String temp = inputs[i];
+                                String quoteFixed = "";
+                                if (!temp.Contains("\"")) { continue; }
+                                String[] splited = temp.Split('\"');
+                                if (splited.Length % 2 == 0) { continue; }
+                                bool openQuote = true;
+                                for (int j = 0; j < splited.Length; j++)
+                                {
+                                    quoteFixed += splited[j];
+                                    quoteFixed += (openQuote ? "“" : "”");
+                                    openQuote = !openQuote;
+                                }
+                                if (quoteFixed.Length > 0)
+                                {
+                                    inputs[i] = quoteFixed.Substring(0, quoteFixed.Length - 1)
+                                        .Replace("“, ”", "\", \"")
+                                        .Replace("“, u”", "\", u\"");
+                                }
+                            }
+
+                        }
+                        String outputFile = output+ "\\" + Path.GetFileName(input);
+                        Directory.CreateDirectory(output);
+                        File.WriteAllLines(outputFile, inputs, encoding);
+                    }
+                    break;
+                case "siglus":
+                    SiglusProcessor siglusProcessor = new SiglusProcessor();
+                    siglusProcessor.loadDefault(true);
+                    if (action.Equals("simple_export_jp"))
+                    {
+                        string inputFile = args[2];
+                        string outputDir = args[3];
+                        siglusProcessor.simpleExport(inputFile, outputDir);
+                    }
+                    break;
+                case "tyrano":
+                    TyranoProcessor tyranoProcessor = new TyranoProcessor();
+                    tyranoProcessor.loadDefault(true);
+                    if (action.Equals("simple_export"))
+                    {
+                        string inputFile = args[2];
+                        string outputDir = args[3];
+                        tyranoProcessor.simpleExport(inputFile, outputDir);
+                    }
+                    break;
+            }
+        }
+        private void saveProperty()
+        {
+            AppProp.saveProp(AppProp.LAST_COMMAND, tbxCommand.Text);
+        }
+
+        private void tbxCommand_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.F5)
+            {
+                tbxCommand.Focus();
+                executeCmd.PerformClick();
+            }
+            if (e.KeyCode == Keys.Escape)
+            {
+                if(tbxCommand.Text.Length== 0)
+                {
+                    Application.Exit();
+                }
+                else
+                {
+                    tbxCommand.Clear();
+                }
+            }
+        }
+
+        private void executeCmd_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+            {
+                tbxCommand.Focus();
+                tbxCommand.SelectAll();
+            }
+        }
+
+        private void openGuideFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (File.Exists(AppConst.GUIDE_FILE))
+            {
+                System.Diagnostics.Process.Start(AppConst.GUIDE_FILE);
+            }
+        }
+
+        private void openConfigFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (File.Exists(AppConst.CONFIG_FILE))
+            {
+                System.Diagnostics.Process.Start(AppConst.CONFIG_FILE);
+            }
+        }
+    }
+}
