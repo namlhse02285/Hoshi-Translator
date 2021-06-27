@@ -32,9 +32,11 @@ namespace Hoshi_Translator.PjProcessor
                 bool isConcat = false;
                 for (int i = 0; i < inputs.Length; i++)
                 {
-                    string filteredLine = Regex.Replace(inputs[i], @"\[.+?\]","");
+                    string filteredLine = Regex.Replace(inputs[i], @"\[.+?\]","").Trim();
                     if (filteredLine.Length== 0) { continue; }
                     if (filteredLine.StartsWith("*")) { continue; }
+                    if (filteredLine.StartsWith(";")) { continue; }
+                    if (filteredLine.StartsWith("$")) { continue; }
                     if (filteredLine.StartsWith("#"))
                     {
                         string charName = filteredLine.Substring(1);
