@@ -205,6 +205,60 @@ namespace Hoshi_Translator
             return addToHead+ input + addToTail;
         }
 
+        public static void updateTranslation(string fromDir, Encoding encoding
+            , string orgLineHeader, string transLineHeader, string toDir, string outputDir)
+        {
+            Directory.CreateDirectory(outputDir);
+            foreach (string fromFilePath in BuCommon.listFiles(fromDir))
+            {
+                string toFilePath = toDir;
+                if (File.GetAttributes(@toDir).HasFlag(FileAttributes.Directory))
+                {
+                    toFilePath += "\\" + Path.GetFileName(fromFilePath);
+                }
+                List<List<string>> fromBlocks = getBlockText(File.ReadAllLines(fromFilePath, encoding));
+                List<List<string>> toBlocks = getBlockText(File.ReadAllLines(toFilePath, encoding));
+                //getBlockSingleText
+                string newFileContent = "";
+
+                int pauseBlockIndex = 0;
+                for (int i = 0; i < toBlocks.Count; i++)
+                {
+                    string toOrgTxt = getBlockSingleText(toBlocks[i], orgLineHeader, false);
+                    for (int j = pauseBlockIndex; j < fromBlocks.Count; j++)
+                    {
+                        string fromOrgTxt = getBlockSingleText(fromBlocks[j], orgLineHeader, false);
+                        string fromTransTxt = getBlockSingleText(fromBlocks[j], transLineHeader, false);
+                        if (fromOrgTxt.Equals(toOrgTxt))
+                        {
+                            int transLineIndex = -1;
+                            for (int k = 0; k < toBlocks[i].Count; k++)
+                            {
+                                if (toBlocks[i][k].StartsWith(transLineHeader))
+                                {
+                                    toBlocks[i][k] = transLineHeader + fromTransTxt;
+                                    transLineIndex = k;
+                                    break;
+                                }
+                            }
+                            for (int k = 0; k < fromBlocks[j].Count; k++)
+                            {
+                                if (!fromBlocks[j][k].StartsWith("<"))
+                                {
+                                    toBlocks[i][transLineIndex] += Environment.NewLine + fromTransTxt;
+                                }
+                            }
+                            pauseBlockIndex = j + 1;
+                            break;
+                        }
+                    }
+                    newFileContent += blockToString(toBlocks[i]);
+                }
+                String outputFile = outputDir + "\\" + Path.GetFileName(fromFilePath);
+                File.WriteAllText(outputFile, newFileContent, encoding);
+            }
+        }
+
 
     }
 }

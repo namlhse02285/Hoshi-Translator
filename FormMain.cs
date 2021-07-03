@@ -94,8 +94,9 @@ namespace Hoshi_Translator
                     {
                         string t1 = "<0006> 「……とっておきのおまじないを教えてあげましょう」";
                         string reg = @"^<\d+>";
-                        MessageBox.Show(Regex.IsMatch(t1, reg).ToString());
-                        MessageBox.Show(String.Format("[\"{0}\"]", "aaa"));
+                        //MessageBox.Show(Regex.IsMatch(t1, reg).ToString());
+                        //MessageBox.Show(String.Format("[\"{0}\"]", "aaa"));
+                        Directory.Move(@"G:\s\u_all\u122\Watashi no H wa Watashi ni Makasete.", @"G:\s\u_all\u122\a1");
                     }
                     if (action.Equals("replacer"))
                     {
@@ -194,6 +195,17 @@ namespace Hoshi_Translator
                         string outputDir = args[8];
                         TransCommon.propertyAndTextFilter(propName, expressionString,
                             isAccept, regexStr, inputFile, encoding, outputDir);
+                    }
+                    if (action.Equals("update_translation"))
+                    {
+                        string fromFile = args[2];
+                        Encoding fromEncoding = BuCommon.getEncodingFromString(args[3]);
+                        string orgLineHeader = args[4];
+                        string transLineHeader = args[5];
+                        string toFile = args[6];
+                        string outputDir= args[7]; Directory.CreateDirectory(outputDir);
+                        TransCommon.updateTranslation(fromFile, fromEncoding,
+                            orgLineHeader, transLineHeader, toFile, outputDir);
                     }
                     break;
                 case "file":
