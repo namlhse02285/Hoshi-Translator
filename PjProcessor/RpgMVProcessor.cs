@@ -89,7 +89,7 @@ namespace Hoshi_Translator.PjProcessor
                 {
                     exportContent = genCommonExportContent(
                         jTokenRoot.SelectTokens(@"$[*].*"),
-                        @"\[\d+\]\.(?=name|description|note|message1|message2)");
+                        @"\[\d+\]\.(?=name|description|message1|message2)");
                 }
                 if ("States".Equals(fileName))
                 {
