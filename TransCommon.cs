@@ -206,7 +206,7 @@ namespace Hoshi_Translator
         }
 
         public static void updateTranslation(string fromDir, Encoding encoding
-            , string orgLineHeader, string transLineHeader, string toDir, string outputDir)
+            , string orgLineHeader, string transLineHeader, string toDir, string outputDir, bool searchFromBegin)
         {
             Directory.CreateDirectory(outputDir);
             foreach (string fromFilePath in BuCommon.listFiles(fromDir))
@@ -248,7 +248,7 @@ namespace Hoshi_Translator
                                     toBlocks[i][transLineIndex] += Environment.NewLine + fromTransTxt;
                                 }
                             }
-                            pauseBlockIndex = j + 1;
+                            pauseBlockIndex = searchFromBegin ? 0 : (j + 1);
                             break;
                         }
                     }

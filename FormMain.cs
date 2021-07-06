@@ -204,8 +204,9 @@ namespace Hoshi_Translator
                         string transLineHeader = args[5];
                         string toFile = args[6];
                         string outputDir= args[7]; Directory.CreateDirectory(outputDir);
+                        bool searchFromBegin = args[8].ToLower().Equals("true");
                         TransCommon.updateTranslation(fromFile, fromEncoding,
-                            orgLineHeader, transLineHeader, toFile, outputDir);
+                            orgLineHeader, transLineHeader, toFile, outputDir, searchFromBegin);
                     }
                     break;
                 case "file":
