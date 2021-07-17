@@ -83,7 +83,7 @@ namespace Hoshi_Translator.PjProcessor
                         {
                             string nextLineContent= TransCommon.getBlockSingleText(
                                 fileBlocks[i + delta], TransCommon.TRANSLATED_LINE_HEAD, false);
-                            curLineContent += " " + nextLineContent;
+                            curLineContent += (curLineContent.EndsWith(";}") ? "" : " ") + nextLineContent;
                         }
                         else
                         {
