@@ -92,11 +92,24 @@ namespace Hoshi_Translator
                 case "common":
                     if (action.Equals("test"))
                     {
-                        string t1 = "<0006> 「……とっておきのおまじないを教えてあげましょう」";
-                        string reg = @"^<\d+>";
+                        string t1 = "{#TIPS_ＭＭＯＲＰＧ = true;$TIPS_on_ＭＭＯＲＰＧ = true;} ESO là tên viết tắt cho con game MMORPG mà tôi xem như cuộc sống của mình.";
+                        string reg = @"(^{.+?})( )";
+                        string regReplaceTo = @"$1";
+                        Debug.WriteLine(Regex.Replace(t1, reg, regReplaceTo));
                         //MessageBox.Show(Regex.IsMatch(t1, reg).ToString());
                         //MessageBox.Show(String.Format("[\"{0}\"]", "aaa"));
-                        Directory.Move(@"G:\s\u_all\u122\Watashi no H wa Watashi ni Makasete.", @"G:\s\u_all\u122\a1");
+                        //Directory.Move(@"G:\s\u_all\u122\Watashi no H wa Watashi ni Makasete.", @"G:\s\u_all\u122\a1");
+                    }
+                    if (action.Equals("font_list"))
+                    {
+                        List<string> fonts = new List<string>();
+
+                        string fontsNameList = "";
+                        foreach (FontFamily font in System.Drawing.FontFamily.Families)
+                        {
+                            fontsNameList += font.Name + Environment.NewLine;
+                        }
+                        MessageBox.Show(fontsNameList);
                     }
                     if (action.Equals("replacer"))
                     {
@@ -120,7 +133,7 @@ namespace Hoshi_Translator
                             for (int i = 0; i < fileContent.Length; i++)
                             {
                                 Match regexMatch = Regex.Match(fileContent[i], filterRegex);
-                                if(regexMatch.Success)
+                                if (regexMatch.Success)
                                 {
                                     string lineContent = fileContent[i];
                                     for (int j = 0; j < relaceList.Count; j++)
@@ -128,7 +141,47 @@ namespace Hoshi_Translator
                                         lineContent = lineContent.Replace(relaceList[j].Key,
                                             @relaceList[j].Value
                                             .Replace("<new_line>", "\r\n")
-                                            .Replace("<full_new_line>","\r\n"));
+                                            .Replace("<full_new_line>", "\r\n"));
+                                    }
+                                    fileContent[i] = lineContent;
+                                }
+                            }
+
+                            String outputFile = outputDir + "\\" + Path.GetFileName(oneFilePath);
+                            File.WriteAllLines(outputFile, fileContent, encoding);
+                        }
+                    }
+                    if (action.Equals("regex_replacer"))
+                    {
+                        string inputDir = args[2];
+                        Encoding encoding = BuCommon.getEncodingFromString(args[3]);
+                        string filterRegex = args[4];
+                        string outputDir = args[5];
+                        string ruleFile = AppConst.REGEX_REPLACE_FILE;
+                        if (args.Length > 6)
+                        {
+                            ruleFile = args[6];
+                        }
+                        Directory.CreateDirectory(outputDir);
+                        List<KeyValuePair<string, string>> relaceList
+                            = BuCommon.getReplaceList(ruleFile, AppConst.REPLACE_SEPARATOR);
+
+                        foreach (string oneFilePath in BuCommon.listFiles(inputDir))
+                        {
+                            string[] fileContent = File.ReadAllLines(oneFilePath, encoding);
+
+                            for (int i = 0; i < fileContent.Length; i++)
+                            {
+                                Match regexMatch = Regex.Match(fileContent[i], filterRegex);
+                                if (regexMatch.Success)
+                                {
+                                    string lineContent = fileContent[i];
+                                    for (int j = 0; j < relaceList.Count; j++)
+                                    {
+                                        lineContent = Regex.Replace(lineContent
+                                            , @relaceList[j].Key, @relaceList[j].Value
+                                            .Replace("<new_line>", "\r\n")
+                                            .Replace("<full_new_line>", "\r\n"));
                                     }
                                     fileContent[i] = lineContent;
                                 }

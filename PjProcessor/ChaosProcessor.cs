@@ -30,7 +30,7 @@ namespace Hoshi_Translator.PjProcessor
             aInputEncoding = BuCommon.getEncodingFromString("shift-jis");
             aMediateEncoding = BuCommon.getEncodingFromString("utf-8-bom");
             aOutputEncoding = BuCommon.getEncodingFromString("shift-jis");
-            aWrapFont = new Font("Noto Sans VN Mod", 40);
+            aWrapFont = new Font("MotoyaLM", 40);
             SIZE_OF_CHARACTER_I = TextRenderer.MeasureText("iiiiiii", aWrapFont).Width
                  - TextRenderer.MeasureText("iiiiii", aWrapFont).Width;
             aMaxWrap = SIZE_OF_CHARACTER_I * 133;
@@ -122,29 +122,29 @@ namespace Hoshi_Translator.PjProcessor
                     {
                         case "box01":
                         case "@box01":
-                            wrapMax = 1950;
+                            wrapMax = 1630;//1950
                             break;
                         case "box02":
                         case "@box02":
-                            wrapMax = 2060;//140
+                            wrapMax = 2060;//2060
                             break;
                         case "box03":
                         case "@box03":
-                            wrapMax = 225 * SIZE_OF_CHARACTER_I;//195
+                            wrapMax = -1;
                             break;
                         case "box04":
                         case "@box04":
-                            wrapMax = 1670;//112
+                            wrapMax = 1720;//1670
                             break;
                         case "wnd_comment":
                         case "@wnd_comment":
-                            wrapMax = 1516;//104
+                            wrapMax = 1312;//1516
                             break;
                         case "character_name":
                             wrapMax = -1;
                             break;
                         default:
-                            wrapMax = 1970;
+                            wrapMax = 1870;//1970
                             break;
                     }
                     for (int i = 0; i < aBlock.Count; i++)

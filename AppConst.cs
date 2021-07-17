@@ -17,6 +17,7 @@ namespace Hoshi_Translator
         public static readonly string REPORT_FILE = Environment.CurrentDirectory + "\\report.txt";
         public static readonly string REPLACE_SEPARATOR = "|replace_to|";
         public static readonly string REPLACE_FILE = Environment.CurrentDirectory + "\\replacer.txt";
+        public static readonly string REGEX_REPLACE_FILE = Environment.CurrentDirectory + "\\regex_replacer.txt";
         public static readonly string REPLACE_WHEN_WRAP_FILE = Environment.CurrentDirectory + "\\replace_when_wrap.txt";
     }
 }
