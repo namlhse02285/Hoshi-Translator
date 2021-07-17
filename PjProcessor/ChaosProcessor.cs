@@ -206,6 +206,10 @@ namespace Hoshi_Translator.PjProcessor
                         {
                             Dictionary<string, string> info = TransCommon.getInfoFromString(aBlock[i]);
                             orgLine = Int32.Parse(info[INFO_LINE_HEAD])- 1;
+                            if (info[INFO_MODE_HEAD].Equals(TransCommon.INFO_MODE_CHARACTER_NAME))
+                            {//Ignore, dont import char name block
+                                break;
+                            }
                             continue;
                         }
                         if (aBlock[i].StartsWith(TransCommon.ORIGINAL_LINE_HEAD)) { continue; }
