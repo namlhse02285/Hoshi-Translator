@@ -78,6 +78,7 @@
     </Compile>
     <Compile Include="FrmMain.cs" />
     <Compile Include="PjProcessor\AbstractPjProcessor.cs" />
+    <Compile Include="PjProcessor\ChaosProcessor.cs" />
     <Compile Include="PjProcessor\RpgVxAceProcessor.cs" />
     <Compile Include="PjProcessor\RpgMVProcessor.cs" />
     <Compile Include="PjProcessor\SiglusProcessor.cs" />

@@ -125,7 +125,10 @@ namespace Hoshi_Translator
                                     string lineContent = fileContent[i];
                                     for (int j = 0; j < relaceList.Count; j++)
                                     {
-                                        lineContent = lineContent.Replace(relaceList[j].Key, relaceList[j].Value);
+                                        lineContent = lineContent.Replace(relaceList[j].Key,
+                                            @relaceList[j].Value
+                                            .Replace("<new_line>", "\r\n")
+                                            .Replace("<full_new_line>","\r\n"));
                                     }
                                     fileContent[i] = lineContent;
                                 }
@@ -304,7 +307,9 @@ namespace Hoshi_Translator
                     {
                         string inputDir = args[2];
                         string outputDir = args[3];
-                        rpgMVProcessor.wrap(inputDir, outputDir);
+                        string wrapReplaceFilePath = null;
+                        if (args.Length > 4) { wrapReplaceFilePath = args[4]; }
+                        rpgMVProcessor.wrap(inputDir, outputDir, wrapReplaceFilePath);
                     }
                     if (action.Equals("import"))
                     {
@@ -403,7 +408,9 @@ namespace Hoshi_Translator
                     {
                         string inputDir = args[2];
                         string outputDir = args[3];
-                        rpgVxAceProcessor.wrap(inputDir, outputDir);
+                        string wrapReplaceFilePath = null;
+                        if (args.Length > 4) { wrapReplaceFilePath = args[4]; }
+                        rpgVxAceProcessor.wrap(inputDir, outputDir, wrapReplaceFilePath);
                     }
                     if (action.Equals("import"))
                     {
@@ -491,6 +498,31 @@ namespace Hoshi_Translator
                         string inputFile = args[2];
                         string outputDir = args[3];
                         tyranoProcessor.simpleExport(inputFile, outputDir);
+                    }
+                    break;
+                case "chaos":
+                    ChaosProcessor chaosProcessor = new ChaosProcessor();
+                    chaosProcessor.loadDefault(true);
+                    if (action.Equals("concat"))
+                    {
+                        string inputFile = args[2];
+                        string outputDir = args[3];
+                        chaosProcessor.concat(inputFile, outputDir);
+                    }
+                    if (action.Equals("wrap"))
+                    {
+                        string inputFile = args[2];
+                        string outputDir = args[3];
+                        string wrapReplaceFilePath= null;
+                        if (args.Length > 4) { wrapReplaceFilePath = args[4]; }
+                        chaosProcessor.wrap(inputFile, outputDir, wrapReplaceFilePath);
+                    }
+                    if (action.Equals("import"))
+                    {
+                        string inputFile = args[2];
+                        string orgDir = args[3];
+                        string outputDir = args[4];
+                        chaosProcessor.import(inputFile, orgDir, outputDir);
                     }
                     break;
             }

@@ -12,6 +12,8 @@ namespace Hoshi_Translator
     {
         public static readonly string TRANS_BLOCK_INFO_HEADER = "<translate_info>";
 
+        public static readonly string INFO_NOTE_HEAD = "note";
+
         public static readonly string INFO_MODE_HEAD = "mode";
         public static readonly string INFO_MODE_CHARACTER_NAME = "character_name";
         public static readonly string INFO_MODE_CHARACTER_FACE = "character_face";
@@ -225,6 +227,7 @@ namespace Hoshi_Translator
                 for (int i = 0; i < toBlocks.Count; i++)
                 {
                     string toOrgTxt = getBlockSingleText(toBlocks[i], orgLineHeader, false);
+                    bool found = false;
                     for (int j = pauseBlockIndex; j < fromBlocks.Count; j++)
                     {
                         string fromOrgTxt = getBlockSingleText(fromBlocks[j], orgLineHeader, false);
@@ -249,8 +252,17 @@ namespace Hoshi_Translator
                                 }
                             }
                             pauseBlockIndex = searchFromBegin ? 0 : (j + 1);
+                            found = true;
                             break;
                         }
+                    }
+                    if (!found)
+                    {
+                        toBlocks[i][0] +=
+                            INFO_SEPARATOR_STR +
+                            INFO_NOTE_HEAD +
+                            INFO_PARAM_SEPARATOR_STR
+                            + "not_found";
                     }
                     newFileContent += blockToString(toBlocks[i]);
                 }

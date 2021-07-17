@@ -207,7 +207,7 @@ namespace Hoshi_Translator.PjProcessor
 
                 if (exportContent.Length > 0)
                 {
-                    string outputPath = String.Format("{0}\\{1}"
+                    string outputPath = String.Format("{0}\\{1}{2}"
                         , outputDir, Path.GetFileNameWithoutExtension(filePath), OUTPUT_FILE_EXTENSION);
                     File.WriteAllText(outputPath, exportContent, aMediateEncoding);
                 }
@@ -247,8 +247,10 @@ namespace Hoshi_Translator.PjProcessor
             string ret = "";
             List<string> tempBlock = new List<string>();
             string orgText = orgTextToken.ToString(Newtonsoft.Json.Formatting.None);
-            orgText = orgText.Substring(0, orgText.Length - 1);
-            orgText = orgText.TrimStart('\"');
+            if (orgTextToken.Type== JTokenType.String)
+            {
+                orgText = orgText.Substring(1, orgText.Length - 2);
+            }
             if (orgText.Length == 0) { return ""; }
 
             tempBlock.Add(TransCommon.TRANS_BLOCK_INFO_HEADER + headerInfo);
@@ -458,9 +460,11 @@ namespace Hoshi_Translator.PjProcessor
                         Dictionary<string, string> headerInfo = TransCommon.getInfoFromString(inputFileArr[i]);
                         string orgTxt = inputFileArr[i + 1].Substring(TransCommon.ORIGINAL_LINE_HEAD.Length);
                         inputFileArr[i + 2] = TransCommon.FULL_TEXT_BOX_LINE_HEAD + orgTxt;
+                        if (Regex.IsMatch(orgTxt, @"{.+?}")) { continue; }
                         if (!headerInfo[INFO_JSONPATH_HEAD].EndsWith(".parameters[0]")) { continue; }
                         if (!headerInfo.ContainsKey(INFO_CODE_HEAD)) { continue; }
-                        if (!headerInfo[INFO_CODE_HEAD].Equals(INFO_CODE_TEXT)) { continue; }
+                        if (!headerInfo[INFO_CODE_HEAD].Equals(INFO_CODE_TEXT)
+                            && !headerInfo[INFO_CODE_HEAD].Equals(INFO_CODE_NOVEL_TEXT)) { continue; }
 
                         //Char name or face detect, ignore concat sentence if detect char name
                         Match match= null;
@@ -522,7 +526,7 @@ namespace Hoshi_Translator.PjProcessor
                 //}
             }
         }
-        public void wrap(string inputDir, string outputDir)
+        public void wrap(string inputDir, string outputDir, string wrapReplaceFilePath)
         {
             Directory.CreateDirectory(outputDir);
             foreach (string fromFilePath in BuCommon.listFiles(inputDir))
@@ -532,6 +536,7 @@ namespace Hoshi_Translator.PjProcessor
                 String fileContent = "";
 
                 List<String> blockTemp = new List<string>();
+                int haveCharFace = 0;
                 for (int i = 0; i < inputFileArr.Length; i++)
                 {
                     if (inputFileArr[i].Length == 0)
@@ -540,14 +545,13 @@ namespace Hoshi_Translator.PjProcessor
                         {
                             Dictionary<string, string> headerInfo;
                             bool needWrap = true;
-                            bool haveCharFace = false;
+                            bool haveCodeText = false;
                             String fullText = "";
                             for (int inI = 0; inI < blockTemp.Count; inI++)
                             {
                                 if (blockTemp[inI].StartsWith(TransCommon.TRANS_BLOCK_INFO_HEADER))
                                 {
-                                    headerInfo = TransCommon.getInfoFromString(
-                                        blockTemp[0].Substring(TransCommon.TRANS_BLOCK_INFO_HEADER.Length));
+                                    headerInfo = TransCommon.getInfoFromString(blockTemp[0]);
                                     if (headerInfo.ContainsKey(TransCommon.INFO_MODE_HEAD))
                                     {
                                         if (headerInfo[TransCommon.INFO_MODE_HEAD].Equals(TransCommon.INFO_MODE_CHARACTER_NAME))
@@ -557,12 +561,25 @@ namespace Hoshi_Translator.PjProcessor
                                         if (headerInfo[TransCommon.INFO_MODE_HEAD].Equals(TransCommon.INFO_MODE_CHARACTER_FACE))
                                         {
                                             needWrap = false;
-                                            haveCharFace = true;
+                                            haveCharFace = 2;
                                         }
                                     }
-                                    if (headerInfo.ContainsKey(INFO_CODE_HEAD) && !headerInfo[INFO_CODE_HEAD].Equals(INFO_CODE_TEXT))
+                                    if (headerInfo.ContainsKey(INFO_CODE_HEAD))
                                     {
-                                        needWrap = false;
+                                        haveCodeText = true;
+                                        if (headerInfo[INFO_CODE_HEAD].Equals(INFO_CODE_CHAR_FACE))
+                                        {
+                                            haveCharFace = 2;
+                                        }
+                                        if(!headerInfo[INFO_CODE_HEAD].Equals(INFO_CODE_TEXT)
+                                            && !headerInfo[INFO_CODE_HEAD].Equals(INFO_CODE_NOVEL_TEXT))
+                                        {
+                                            needWrap = false;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        haveCodeText = false;
                                     }
                                     continue;
                                 }
@@ -578,17 +595,18 @@ namespace Hoshi_Translator.PjProcessor
                                 }
                                 if (sentence.Contains(LINE_BREAK_TEMP)){needWrap = false;}
                                 if (sentence.Contains("<wrap>")){needWrap = false;}
-                                if (sentence.StartsWith("{")){needWrap = false;}
 
                                 sentence = sentence.Replace("\\", SLASH_REPLACE_STRING).Replace(LINE_BREAK_TEMP, aWrapString);
                                 if (sentence.Length > 0)
                                 {
                                     //Do wrap function here
                                     int wrapMax = aMaxWrap;
-                                    if (haveCharFace) { wrapMax = aMaxWrap - 126; }
-                                    if (needWrap) { sentence = textSizeWrap(sentence, aWrapFont, wrapMax, aWrapString, out _); }
+                                    if (haveCharFace== 1) { wrapMax = aMaxWrap - 126; }
+                                    if (!haveCodeText) { wrapMax = aMaxWrap + 180; }
+                                    if (needWrap) { sentence = textSizeWrap(sentence, aWrapFont, wrapMax, aWrapString, wrapReplaceFilePath, out _); }
                                     fullText += fullText.Length == 0 ? sentence : (aWrapString + sentence);
                                 }
+                                if (inI == blockTemp.Count - 1) { haveCharFace--; }
                             }
                             fileContent += makeBlockStringForWrap(blockTemp, fullText);
                             blockTemp.Clear();
@@ -706,7 +724,14 @@ namespace Hoshi_Translator.PjProcessor
             removeEmptyLinePath.Reverse();
             foreach (string removeEmptyPath in removeEmptyLinePath)
             {
-                jTokenRootTemp.SelectToken(removeEmptyPath).Remove();
+                JToken jTokenTemp = jTokenRootTemp.SelectToken(removeEmptyPath);
+                while(true)
+                {
+                    if (jTokenTemp.Type == JTokenType.Object
+                        && JObject.Parse(jTokenTemp.ToString()).ContainsKey(INFO_CODE_HEAD)) { break; }
+                    jTokenTemp = jTokenTemp.Parent;
+                }
+                jTokenRootTemp.SelectToken(jTokenTemp.Path).Remove();
             }
             File.WriteAllText(outputFile, jTokenRootTemp.ToString(Formatting.None).Replace(SLASH_REPLACE_STRING, "\\"), aOutputEncoding);
             return true;
@@ -715,8 +740,8 @@ namespace Hoshi_Translator.PjProcessor
         {
             Dictionary<String, string> blockInfo = TransCommon.getInfoFromString(anImportBlock[0]);
             List<string> removeEmptyLinePathList = new List<string>();
-            if (blockInfo.ContainsKey(TransCommon.INFO_MODE_HEAD)
-                && blockInfo[TransCommon.INFO_MODE_HEAD].Equals(TransCommon.INFO_MODE_CHARACTER_FACE))
+            if (blockInfo.ContainsKey(INFO_CODE_HEAD)
+                && blockInfo[INFO_CODE_HEAD].Equals(INFO_CODE_CHAR_FACE))
             {
                 return removeEmptyLinePathList;
             }

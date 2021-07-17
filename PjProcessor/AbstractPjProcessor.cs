@@ -92,13 +92,16 @@ namespace Hoshi_Translator.PjProcessor
                 replaceTo = _replaceTo;
             }
         }
-        public static string textSizeWrap(string preInput, Font font, int maxPixel, string orgWrapChar, out int outLineCount)
+        public static string textSizeWrap(string preInput, Font font, int maxPixel, string orgWrapChar, string wrapReplaceFilePath, out int outLineCount)
         {
             outLineCount = 1;
+            if (maxPixel <= 0) { return preInput; }
             string wrapChar = "‡";
             int spaceSize = TextRenderer.MeasureText("aaa bbb", font).Width
                  - TextRenderer.MeasureText("aaabbb", font).Width;
-            List<KeyValuePair<string, string>> patternList = getReplaceList(AppConst.REPLACE_WHEN_WRAP_FILE);
+            List<KeyValuePair<string, string>> patternList = getReplaceList(
+                wrapReplaceFilePath == null || !File.Exists(wrapReplaceFilePath)
+                    ? AppConst.REPLACE_WHEN_WRAP_FILE : wrapReplaceFilePath);
             List<RPGMidWrap> replaceList = new List<RPGMidWrap>();
             foreach (KeyValuePair<String, string> patternKeyValue in patternList)
             {

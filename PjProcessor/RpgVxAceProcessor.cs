@@ -322,7 +322,7 @@ namespace Hoshi_Translator.PjProcessor
             }
         }
 
-        public void wrap(string inputDir, string outputDir)
+        public void wrap(string inputDir, string outputDir, string wrapReplaceFilePath)
         {
             Directory.CreateDirectory(outputDir);
             foreach (string fromFilePath in BuCommon.listFiles(inputDir))
@@ -343,8 +343,7 @@ namespace Hoshi_Translator.PjProcessor
                             .Replace("††n", "†n")
                             .Replace("**", "††");
                         fullWrap = textSizeWrap(
-                            lineContent,
-                            aWrapFont, aMaxWrap, aWrapString, out _);
+                            lineContent, aWrapFont, aMaxWrap, aWrapString, wrapReplaceFilePath, out _);
                         transLine = i;
                     }
                     if (inputFileArr[i].Length> 0 && !inputFileArr[i].StartsWith("<"))
@@ -356,7 +355,8 @@ namespace Hoshi_Translator.PjProcessor
                             .Replace("†", "††")
                             .Replace("††n", "†n")
                             .Replace("**", "††");
-                        fullWrap += aWrapString+ textSizeWrap(lineContent, aWrapFont, aMaxWrap, aWrapString, out _);
+                        fullWrap += aWrapString+ textSizeWrap(
+                            lineContent, aWrapFont, aMaxWrap, aWrapString, wrapReplaceFilePath, out _);
                         inputFileArr[i] = "";
                     }
                     if(inputFileArr[i].Length== 0 && fullWrap.Length> 0 && transLine>= 0)
