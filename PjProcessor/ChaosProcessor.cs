@@ -138,7 +138,7 @@ namespace Hoshi_Translator.PjProcessor
                             break;
                         case "wnd_comment":
                         case "@wnd_comment":
-                            wrapMax = 1312;//1516
+                            wrapMax = 1570;//1516
                             break;
                         case "character_name":
                             wrapMax = -1;
@@ -155,14 +155,17 @@ namespace Hoshi_Translator.PjProcessor
                             string lineTrim = line.Trim();
                             if (lineTrim.EndsWith(";"))
                             {
-                                MatchCollection stringMatch = Regex.Matches(line, "\".*?\"");
-                                foreach (Match m in stringMatch)
+                                if (!lineTrim.ToLower().Contains("setbacklog("))
                                 {
-                                    string sentence = m.Value.Substring(1, m.Value.Length- 2);
-                                    sentence= textSizeWrap(sentence, aWrapFont, wrapMax, aWrapString, wrapReplaceFilePath, out _);
-                                    line = line.Replace(m.Value, "\""+ sentence + "\"");
+                                    MatchCollection stringMatch = Regex.Matches(line, "\".*?\"");
+                                    foreach (Match m in stringMatch)
+                                    {
+                                        string sentence = m.Value.Substring(1, m.Value.Length - 2);
+                                        sentence = textSizeWrap(sentence, aWrapFont, wrapMax, aWrapString, wrapReplaceFilePath, out _);
+                                        line = line.Replace(m.Value, "\"" + sentence + "\"");
+                                    }
+                                    newBlockContent[i] = TransCommon.TRANSLATED_LINE_HEAD + line;
                                 }
-                                newBlockContent[i] = TransCommon.TRANSLATED_LINE_HEAD + line;
                             }
                             else
                             {
@@ -224,12 +227,23 @@ namespace Hoshi_Translator.PjProcessor
                             toFileLines[orgLine] += Environment.NewLine+ Environment.NewLine;
                             sentence = aBlock[i];
                         }
-                        sentence = base.convertCharacter(sentence, listCharVi, listCharJp);
-                        if (!sentence.ToLower().Contains("setbacklog(")
-                            && !sentence.ToLower().Contains("setfont("))
+                        if (sentence.Contains(")"))
+                        {
+                            if (!sentence.ToLower().Contains("setbacklog("))
+                            {
+                                MatchCollection paramMatch = Regex.Matches(sentence, "\".*?\"");
+                                foreach (Match m in paramMatch)
+                                {
+                                    sentence = sentence.Replace(m.Value,
+                                        m.Value.Replace(".", "&.").Replace(",", "&,"));
+                                }
+                            }
+                        }
+                        else
                         {
                             sentence = sentence.Replace(".", "&.").Replace(",", "&,");
                         }
+                        sentence = base.convertCharacter(sentence, listCharVi, listCharJp);
                         toFileLines[orgLine] += sentence;
                     }
                 }
