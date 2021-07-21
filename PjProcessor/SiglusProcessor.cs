@@ -10,6 +10,8 @@ namespace Hoshi_Translator.PjProcessor
 {
     class SiglusProcessor : AbstractPjProcessor
     {
+        private const string OUTPUT_FILE_EXTENSION = ".txt";
+        private const string SS_TRANS_LINE_HEAD_REGEX = @"^<\d+?> ";
         public override void loadDefault(bool forceReload)
         {
             aInputEncoding = BuCommon.getEncodingFromString("utf-8-bom");
@@ -34,10 +36,10 @@ namespace Hoshi_Translator.PjProcessor
                 bool isFirst = true;
                 for (int i = 0; i < inputs.Length; i++)
                 {
-                    Match headerMatch = Regex.Match(inputs[i], @"^<\d+>");
+                    Match headerMatch = Regex.Match(inputs[i], SS_TRANS_LINE_HEAD_REGEX);
                     if (headerMatch.Success)
                     {
-                        string orgText = inputs[i].Substring(headerMatch.Length+ 1);
+                        string orgText = inputs[i].Substring(headerMatch.Length);
 
                         Match match = Regex.Match(orgText.Trim(), exp);
                         if (match.Length == 0 || match.Length < orgText.Trim().Length)
@@ -73,6 +75,75 @@ namespace Hoshi_Translator.PjProcessor
                     String outputFile = outputDir + "\\" + Path.GetFileName(filePath);
                     File.WriteAllText(outputFile, output, aMediateEncoding);
                 }
+            }
+        }
+
+        public void exportEng(string inputFile, string outputDir)
+        {
+            Directory.CreateDirectory(outputDir);
+            foreach (string filePath in BuCommon.listFiles(inputFile))
+            {
+                string[] fileContent = File.ReadAllLines(filePath, aInputEncoding);
+                string exportContent = "";
+                for (int i = 0; i < fileContent.Length; i++)
+                {
+                    Match sentenceMatch = Regex.Match(fileContent[i], SS_TRANS_LINE_HEAD_REGEX);
+                    if(sentenceMatch.Success)
+                    {
+                        string lineHead = sentenceMatch.Value;
+                        string sentence = fileContent[i].Substring(lineHead.Length);
+                        if (!Regex.IsMatch(sentence, "[.,!?\"]$")) { continue; }
+                        List<string> tempBlock = new List<string>();
+                        tempBlock.Add(TransCommon.TRANS_BLOCK_INFO_HEADER
+                            + TransCommon.makeOneInfoStr(false, TransCommon.INFO_LINE_HEAD, (i + 1).ToString()));
+                        tempBlock.Add(TransCommon.ORIGINAL_LINE_HEAD + sentence);
+                        tempBlock.Add(TransCommon.TRANSLATED_LINE_HEAD);
+                        exportContent += TransCommon.blockToString(tempBlock);
+                    }
+                }
+                if (exportContent.Length > 0)
+                {
+                    string outputPath = String.Format("{0}\\{1}"
+                        , outputDir, Path.GetFileName(filePath));
+                    File.WriteAllText(outputPath, exportContent, aMediateEncoding);
+                }
+            }
+        }
+
+        public void import(string inputDir, string orgDir, string outputDir)
+        {
+            Directory.CreateDirectory(outputDir);
+            foreach (string fromFilePath in BuCommon.listFiles(inputDir))
+            {
+                string orgFilePath = orgDir;
+                if (File.GetAttributes(@orgDir).HasFlag(FileAttributes.Directory))
+                {
+                    orgFilePath += "\\" + Path.GetFileName(fromFilePath);
+                }
+                string[] toFileLines = File.ReadAllLines(orgFilePath, aInputEncoding);
+                string toFilePath = outputDir + "\\" + Path.GetFileName(fromFilePath);
+                List<List<string>> allBlocks =
+                    TransCommon.getBlockText(File.ReadAllLines(fromFilePath, aMediateEncoding));
+                foreach (List<string> aBlock in allBlocks)
+                {
+                    int orgLine = -1;
+                    for (int i = 0; i < aBlock.Count; i++)
+                    {
+                        if (aBlock[i].StartsWith(TransCommon.TRANS_BLOCK_INFO_HEADER))
+                        {
+                            Dictionary<string, string> info = TransCommon.getInfoFromString(aBlock[i]);
+                            orgLine = Int32.Parse(info[TransCommon.INFO_LINE_HEAD]) - 1;
+                            continue;
+                        }
+                        if (aBlock[i].StartsWith(TransCommon.TRANSLATED_LINE_HEAD))
+                        {
+                            string sentence = aBlock[i].Substring(TransCommon.TRANSLATED_LINE_HEAD.Length);
+                            Match sentenceMatch = Regex.Match(toFileLines[orgLine], SS_TRANS_LINE_HEAD_REGEX);
+                            toFileLines[orgLine] = sentenceMatch.Value + sentence;
+                        }
+                    }
+                }
+                File.WriteAllLines(toFilePath, toFileLines, aOutputEncoding);
             }
         }
 

@@ -134,7 +134,7 @@ namespace Hoshi_Translator.PjProcessor
                             break;
                         case "box04":
                         case "@box04":
-                            wrapMax = 1720;//1670
+                            wrapMax = 1780;//1670
                             break;
                         case "wnd_comment":
                         case "@wnd_comment":
@@ -153,7 +153,7 @@ namespace Hoshi_Translator.PjProcessor
                         {
                             string line = aBlock[i].Substring(TransCommon.TRANSLATED_LINE_HEAD.Length);
                             string lineTrim = line.Trim();
-                            if (lineTrim.EndsWith(";"))
+                            if (lineTrim.EndsWith(");"))
                             {
                                 if (!lineTrim.ToLower().Contains("setbacklog("))
                                 {
@@ -169,8 +169,15 @@ namespace Hoshi_Translator.PjProcessor
                             }
                             else
                             {
-                                newBlockContent[i] = TransCommon.TRANSLATED_LINE_HEAD +
-                                    textSizeWrap(line, aWrapFont, wrapMax, aWrapString, wrapReplaceFilePath, out _);
+                                if (lineTrim.Contains("http:"))
+                                {//Ignore wrap
+                                    newBlockContent[i] = TransCommon.TRANSLATED_LINE_HEAD + line;
+                                }
+                                else
+                                {
+                                    newBlockContent[i] = TransCommon.TRANSLATED_LINE_HEAD +
+                                        textSizeWrap(line, aWrapFont, wrapMax, aWrapString, wrapReplaceFilePath, out _);
+                                }
                             }
                         }
                         if (!aBlock[i].StartsWith("<"))
@@ -227,7 +234,7 @@ namespace Hoshi_Translator.PjProcessor
                             toFileLines[orgLine] += Environment.NewLine+ Environment.NewLine;
                             sentence = aBlock[i];
                         }
-                        if (sentence.Contains(")"))
+                        if (sentence.TrimEnd().EndsWith(");"))
                         {
                             if (!sentence.ToLower().Contains("setbacklog("))
                             {

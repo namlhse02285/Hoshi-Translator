@@ -12,6 +12,8 @@ namespace Hoshi_Translator
     {
         public static readonly string TRANS_BLOCK_INFO_HEADER = "<translate_info>";
 
+        public static readonly string INFO_LINE_HEAD = "line";
+
         public static readonly string INFO_NOTE_HEAD = "note";
 
         public static readonly string INFO_MODE_HEAD = "mode";
@@ -218,6 +220,7 @@ namespace Hoshi_Translator
                 {
                     toFilePath += "\\" + Path.GetFileName(fromFilePath);
                 }
+                if (!File.Exists(toFilePath)) { continue; }
                 List<List<string>> fromBlocks = getBlockText(File.ReadAllLines(fromFilePath, encoding));
                 List<List<string>> toBlocks = getBlockText(File.ReadAllLines(toFilePath, encoding));
                 //getBlockSingleText

@@ -264,6 +264,47 @@ namespace Hoshi_Translator
                         TransCommon.updateTranslation(fromFile, fromEncoding,
                             orgLineHeader, transLineHeader, toFile, outputDir, searchFromBegin);
                     }
+                    if (action.Equals("single_take_out_diff_filtered_line"))
+                    {
+                        string fromFilePath = args[2];
+                        Encoding encoding = BuCommon.getEncodingFromString(args[3]);
+                        string filterRegex= args[4];
+                        string takeOutRegex= args[5];
+                        string outputFile = AppConst.OUTPUT_FILE;
+                        if(args.Length> 6)
+                        {
+                            outputFile = args[6];
+                        }
+                        List<string> outputContent = new List<string>();
+                        foreach (string oneFilePath in BuCommon.listFiles(fromFilePath))
+                        {
+                            string[] fileContent = File.ReadAllLines(oneFilePath, encoding);
+
+                            for (int i = 0; i < fileContent.Length; i++)
+                            {
+                                string line = fileContent[i];
+                                if (Regex.IsMatch(line, filterRegex))
+                                {
+                                    string toTakeOut = Regex.Match(line, takeOutRegex).Value;
+                                    if (null!= toTakeOut && toTakeOut.Length> 0
+                                        && !outputContent.Contains(toTakeOut))
+                                    {
+                                        outputContent.Add(toTakeOut);
+                                    }
+                                }
+                            }
+                            if (!File.Exists(outputFile))
+                            {
+                                String outputFilePath = outputFile + "\\" + Path.GetFileName(oneFilePath);
+                                File.WriteAllLines(outputFilePath, outputContent, encoding);
+                                outputContent.Clear();
+                            }
+                        }
+                        if (File.Exists(outputFile))
+                        {
+                            File.WriteAllLines(outputFile, outputContent, encoding);
+                        }
+                    }
                     break;
                 case "file":
                     if (action.Equals("take_out"))
@@ -535,6 +576,19 @@ namespace Hoshi_Translator
                         string inputFile = args[2];
                         string outputDir = args[3];
                         siglusProcessor.simpleExport(inputFile, outputDir);
+                    }
+                    if (action.Equals("export_eng"))
+                    {
+                        string inputFile = args[2];
+                        string outputDir = args[3];
+                        siglusProcessor.exportEng(inputFile, outputDir);
+                    }
+                    if (action.Equals("import"))
+                    {
+                        string inputFile = args[2];
+                        string orgtDir = args[3];
+                        string outputDir = args[4];
+                        siglusProcessor.import(inputFile, orgtDir, outputDir);
                     }
                     if (action.Equals("ss_wrap"))
                     {

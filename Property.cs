@@ -18,6 +18,11 @@ namespace Hoshi_Translator
             public static readonly string WRAP_MAX = "WRAP_MAX";
             public static readonly string WRAP_STRING = "WRAP_STRING";
         }
+        public class RPGProp
+        {
+            public static readonly string RPG_FACE_WRAP_MAX = "RPG_FACE_WRAP_MAX";
+            public static readonly string RPG_NONE_CODE_WRAP_MAX = "RPG_NONE_CODE_WRAP_MAX";
+        }
 
         private Dictionary<String, String> list;
         private String filename;

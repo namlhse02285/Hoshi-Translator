@@ -17,6 +17,8 @@ namespace Hoshi_Translator.PjProcessor
         protected Encoding aOutputEncoding;
         protected Font aWrapFont;
         protected int aMaxWrap;
+        protected int aRpgFaceWrapMax;
+        protected int aRpgNoneCodeWrapMax;
         protected string aWrapString;
 
         public virtual void loadDefault(bool forceReload)
@@ -37,6 +39,10 @@ namespace Hoshi_Translator.PjProcessor
                     aWrapFont = new Font(aProp.get(Property.Common.WRAP_FONT_NAME), float.Parse(aProp.get(Property.Common.WRAP_FONT_SIZE)));
                 if (aProp.get(Property.Common.WRAP_MAX) != null && aProp.get(Property.Common.WRAP_MAX).Length > 0)
                     aMaxWrap = Int32.Parse(aProp.get(Property.Common.WRAP_MAX));
+                if (aProp.get(Property.RPGProp.RPG_FACE_WRAP_MAX) != null && aProp.get(Property.RPGProp.RPG_FACE_WRAP_MAX).Length > 0)
+                    aRpgFaceWrapMax = Int32.Parse(aProp.get(Property.RPGProp.RPG_FACE_WRAP_MAX));
+                if (aProp.get(Property.RPGProp.RPG_NONE_CODE_WRAP_MAX) != null && aProp.get(Property.RPGProp.RPG_NONE_CODE_WRAP_MAX).Length > 0)
+                    aRpgNoneCodeWrapMax = Int32.Parse(aProp.get(Property.RPGProp.RPG_NONE_CODE_WRAP_MAX));
                 if (aProp.get(Property.Common.WRAP_STRING) != null && aProp.get(Property.Common.WRAP_STRING).Length > 0)
                 {
                     aWrapString = aProp.get(Property.Common.WRAP_STRING);

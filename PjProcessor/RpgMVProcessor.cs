@@ -32,6 +32,8 @@ namespace Hoshi_Translator.PjProcessor
             aMaxWrap = 620;
             aWrapString = "†n";
             base.loadDefault(forceReload);
+            aRpgFaceWrapMax = aMaxWrap - 126;
+            aRpgNoneCodeWrapMax = aMaxWrap + 180;
         }
 
         public void export(string dataDir, string outputDir, string codeFilter)
@@ -149,6 +151,9 @@ namespace Hoshi_Translator.PjProcessor
                 {
                     exportContent = genCommonExportContent(
                         jTokenRoot.SelectTokens(@"displayName"),
+                        null);
+                    exportContent = genCommonExportContent(
+                        jTokenRoot.SelectTokens(@"events[*].note"),
                         null);
 
                     string jPath = @"events[*].pages[*].list[?(" + codeFilter + ")].parameters[0]";
@@ -307,6 +312,7 @@ namespace Hoshi_Translator.PjProcessor
             foreach (string fromFilePath in BuCommon.listFiles(fromDir))
             {
                 string toFilePath = toDir + "\\" + Path.GetFileName(fromFilePath);
+                if (!File.Exists(toFilePath)) { continue; }
                 string[] fromFileArr = File.ReadAllLines(fromFilePath, aMediateEncoding);
                 string[] toFileArr = File.ReadAllLines(toFilePath, aMediateEncoding);
                 int pauseLine = 0;
@@ -536,7 +542,8 @@ namespace Hoshi_Translator.PjProcessor
                 String fileContent = "";
 
                 List<String> blockTemp = new List<string>();
-                int haveCharFace = 0;
+                bool haveCharFace = false;
+                string lastJsonPath= "";
                 for (int i = 0; i < inputFileArr.Length; i++)
                 {
                     if (inputFileArr[i].Length == 0)
@@ -552,6 +559,10 @@ namespace Hoshi_Translator.PjProcessor
                                 if (blockTemp[inI].StartsWith(TransCommon.TRANS_BLOCK_INFO_HEADER))
                                 {
                                     headerInfo = TransCommon.getInfoFromString(blockTemp[0]);
+                                    if(!headerInfo[INFO_JSONPATH_HEAD].Equals(guestNextJsonPath(lastJsonPath)))
+                                    {
+                                        haveCharFace = false;
+                                    }
                                     if (headerInfo.ContainsKey(TransCommon.INFO_MODE_HEAD))
                                     {
                                         if (headerInfo[TransCommon.INFO_MODE_HEAD].Equals(TransCommon.INFO_MODE_CHARACTER_NAME))
@@ -561,7 +572,7 @@ namespace Hoshi_Translator.PjProcessor
                                         if (headerInfo[TransCommon.INFO_MODE_HEAD].Equals(TransCommon.INFO_MODE_CHARACTER_FACE))
                                         {
                                             needWrap = false;
-                                            haveCharFace = 2;
+                                            haveCharFace = true;
                                         }
                                     }
                                     if (headerInfo.ContainsKey(INFO_CODE_HEAD))
@@ -569,7 +580,7 @@ namespace Hoshi_Translator.PjProcessor
                                         haveCodeText = true;
                                         if (headerInfo[INFO_CODE_HEAD].Equals(INFO_CODE_CHAR_FACE))
                                         {
-                                            haveCharFace = 2;
+                                            haveCharFace = true;
                                         }
                                         if(!headerInfo[INFO_CODE_HEAD].Equals(INFO_CODE_TEXT)
                                             && !headerInfo[INFO_CODE_HEAD].Equals(INFO_CODE_NOVEL_TEXT))
@@ -581,6 +592,7 @@ namespace Hoshi_Translator.PjProcessor
                                     {
                                         haveCodeText = false;
                                     }
+                                    lastJsonPath = headerInfo[INFO_JSONPATH_HEAD];
                                     continue;
                                 }
 
@@ -601,12 +613,14 @@ namespace Hoshi_Translator.PjProcessor
                                 {
                                     //Do wrap function here
                                     int wrapMax = aMaxWrap;
-                                    if (haveCharFace== 1) { wrapMax = aMaxWrap - 126; }
-                                    if (!haveCodeText) { wrapMax = aMaxWrap + 180; }
+                                    if (haveCharFace)
+                                    {
+                                        wrapMax = aRpgFaceWrapMax;
+                                    }
+                                    if (!haveCodeText) { wrapMax = aRpgNoneCodeWrapMax; }
                                     if (needWrap) { sentence = textSizeWrap(sentence, aWrapFont, wrapMax, aWrapString, wrapReplaceFilePath, out _); }
                                     fullText += fullText.Length == 0 ? sentence : (aWrapString + sentence);
                                 }
-                                if (inI == blockTemp.Count - 1) { haveCharFace--; }
                             }
                             fileContent += makeBlockStringForWrap(blockTemp, fullText);
                             blockTemp.Clear();
@@ -672,20 +686,6 @@ namespace Hoshi_Translator.PjProcessor
                     File.WriteAllLines(oneFilePath, fileContent, aMediateEncoding);
                 }
             }
-        }
-
-        private string guestNextJsonPath(string oldPath)
-        {
-            if (!oldPath.EndsWith("].parameters[0]")) { return null; }
-            string ret;
-            string halfPath = oldPath.Replace("].parameters[0]", String.Empty);
-            int jsonIndex = Int32.Parse(
-                halfPath.Substring(halfPath.LastIndexOf("[") + 1)
-                );
-            ret = halfPath.Substring(0, halfPath.LastIndexOf("[") + 1)
-                    + (++jsonIndex)
-                    + "].parameters[0]";
-            return ret;
         }
 
         JToken jTokenRootTemp;
@@ -801,7 +801,20 @@ namespace Hoshi_Translator.PjProcessor
             }
             return removeEmptyLinePathList;
         }
-
+        private string guestNextJsonPath(string currentJsonPath)
+        {
+            if (null == currentJsonPath || currentJsonPath.Length == 0) { return ""; }
+            string toMatchExpression = @"(?<!parameters\[)(?<=\[)\d+(?=\])";
+            MatchCollection allNumberMatch = Regex.Matches(currentJsonPath, toMatchExpression);
+            if (allNumberMatch.Count == 0) { return ""; }
+            Match lastNumberMatch= allNumberMatch[allNumberMatch.Count- 1];
+            int nextNumber = Int32.Parse(lastNumberMatch.Value) + 1;
+            return String.Format("{0}{1}{2}",
+                currentJsonPath.Substring(0, lastNumberMatch.Index),
+                nextNumber,
+                currentJsonPath.Substring(lastNumberMatch.Index+ lastNumberMatch.Length)
+            );
+        }
 
     }
 }
