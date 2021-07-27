@@ -231,10 +231,14 @@ namespace Hoshi_Translator
                 {
                     string toOrgTxt = getBlockSingleText(toBlocks[i], orgLineHeader, false);
                     bool found = false;
+                    string note = "";
                     for (int j = pauseBlockIndex; j < fromBlocks.Count; j++)
                     {
                         string fromOrgTxt = getBlockSingleText(fromBlocks[j], orgLineHeader, false);
                         string fromTransTxt = getBlockSingleText(fromBlocks[j], transLineHeader, false);
+                        Dictionary<string, string> transInfo = getInfoFromString(fromBlocks[j][0]);
+                        if (transInfo.ContainsKey(INFO_NOTE_HEAD)){ note = transInfo[INFO_NOTE_HEAD]; }
+
                         if (fromOrgTxt.Equals(toOrgTxt))
                         {
                             int transLineIndex = -1;
@@ -259,7 +263,15 @@ namespace Hoshi_Translator
                             break;
                         }
                     }
-                    if (!found)
+                    if (found)
+                    {
+                        if(null!= note && note.Length> 0) toBlocks[i][0] +=
+                            INFO_SEPARATOR_STR +
+                            INFO_NOTE_HEAD +
+                            INFO_PARAM_SEPARATOR_STR +
+                            note;
+                    }
+                    else
                     {
                         toBlocks[i][0] +=
                             INFO_SEPARATOR_STR +

@@ -86,6 +86,21 @@ namespace Hoshi_Translator.PjProcessor
             }
         }
 
+        public static string textSizeWrap(IEnumerable<string> multiLine, Font font, int maxPixel, string orgWrapChar, string wrapReplaceFilePath, out int outLineCount)
+        {
+            string ret = "";
+            outLineCount = 0;
+            IEnumerator<string> enumerator = multiLine.GetEnumerator();
+            while (enumerator.MoveNext())
+            {
+                int oneLineWrapCount = 1;
+                ret += textSizeWrap(enumerator.Current, font, maxPixel
+                        , orgWrapChar, wrapReplaceFilePath, out oneLineWrapCount)
+                    + orgWrapChar;
+                outLineCount += oneLineWrapCount;
+            }
+            return ret.Substring(0, ret.Length- orgWrapChar.Length);
+        }
         class RPGMidWrap
         {
             public int index { get; set; }

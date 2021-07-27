@@ -14,7 +14,8 @@ namespace Hoshi_Translator.PjProcessor
         private int SIZE_OF_CHARACTER_I;
 
         public static readonly string INFO_MODE_HEAD = "Mode";
-        public static readonly string INFO_MODE_HOVER = "hover";
+        public static readonly string INFO_MODE_CODE = "code";
+        public static readonly string INFO_MODE_TEXT = "text";
         public static readonly string INFO_LINE_HEAD = "Line";
 
         private List<char> listCharVi = new List<char>()
@@ -36,6 +37,90 @@ namespace Hoshi_Translator.PjProcessor
             aMaxWrap = SIZE_OF_CHARACTER_I * 133;
             aWrapString = "<br>";
             base.loadDefault(forceReload);
+        }
+
+        public void export(string inputDir, string outputDir)
+        {
+            Directory.CreateDirectory(outputDir);
+            foreach (string fromFilePath in BuCommon.listFiles(inputDir))
+            {
+                string toFilePath = outputDir + "\\" + Path.GetFileName(fromFilePath);
+                string[] inputFileArr = File.ReadAllLines(fromFilePath, aInputEncoding);
+                string currentBox = "";
+                string exportContent = "";
+
+                for (int i = 0; i < inputFileArr.Length; i++)
+                {
+                    string stringToProcess= inputFileArr[i].Trim().Trim('\t').ToLower();
+                    stringToProcess = Regex.Replace(stringToProcess, @"\/\/.*", String.Empty);
+                    Dictionary<string, string> headerInfo = new Dictionary<string, string>();
+
+                    if (stringToProcess.Length == 0) { continue; }
+                    headerInfo.Add(TransCommon.INFO_LINE_HEAD, (i + 1).ToString());
+                    if (Regex.IsMatch(stringToProcess, @"^<.+?>$"))
+                    {
+                        if (stringToProcess.StartsWith("<voice"))
+                        {
+                            headerInfo.Add(TransCommon.INFO_MODE_HEAD, TransCommon.INFO_MODE_CHARACTER_NAME);
+                            exportContent += genOneBlock(headerInfo,
+                                Regex.Match(stringToProcess, "(?<=\").*?(?=\")").Value);
+                        }
+                        if (stringToProcess.StartsWith("</pre"))
+                        {
+                            currentBox = "";
+                        }
+                        if (stringToProcess.StartsWith("<pre") && !stringToProcess.Contains("</pre"))
+                        {
+                            currentBox = Regex.Match(stringToProcess, @"(?<=<pre ).+?(?=>)").Value;
+                        }
+                        continue;
+                    }
+                    if(currentBox.Length> 0) //In a box
+                    {
+                        stringToProcess = Regex.Replace(stringToProcess, @"{(?!.tips).+?}", String.Empty);
+                        stringToProcess = Regex.Replace(stringToProcess, @"<.+?>", String.Empty);
+                        stringToProcess = Regex.Replace(stringToProcess, @"\[.+?\]", String.Empty);
+                        if(stringToProcess.Length> 0
+                            && (!Regex.IsMatch(stringToProcess, @"; *}*$")
+                            || Regex.IsMatch(stringToProcess, @".tips")) )
+                        {
+                            headerInfo.Add(TransCommon.INFO_MODE_HEAD, currentBox);
+                            exportContent += genOneBlock(headerInfo, inputFileArr[i]);
+                        }
+                    }
+                    else //Not in a box, treat as code
+                    {
+                        if (stringToProcess.Contains("createtext(")
+                            || stringToProcess.Contains("setfont(")
+                            || stringToProcess.Contains("setbacklog(")
+                            || stringToProcess.Contains("centerlog(")
+                            || stringToProcess.Contains("centernolog("))
+                        {
+                            headerInfo.Add(TransCommon.INFO_MODE_HEAD, INFO_MODE_CODE);
+                            exportContent += genOneBlock(headerInfo, inputFileArr[i]);
+                        }
+                    }
+                }
+
+                File.WriteAllText(toFilePath, exportContent, aMediateEncoding);
+            }
+        }
+        private string genOneBlock(Dictionary<string, string> headerInfo, string orgText)
+        {
+            string ret = "";
+            List<string> tempBlock = new List<string>();
+
+            tempBlock.Add(TransCommon.genInfoString(headerInfo));
+            tempBlock.Add(TransCommon.ORIGINAL_LINE_HEAD + orgText);
+            tempBlock.Add(TransCommon.TRANSLATED_LINE_HEAD);
+            tempBlock.Add("");
+
+            foreach (string blockLine in tempBlock)
+            {
+                ret += blockLine + Environment.NewLine;
+            }
+
+            return ret;
         }
 
         public void concat(string inputDir, string outputDir)
@@ -60,7 +145,8 @@ namespace Hoshi_Translator.PjProcessor
                     }
                     Dictionary<string, string> info = TransCommon.getInfoFromString(fileBlocks[i][0]);
                     if (info[INFO_MODE_HEAD] == TransCommon.INFO_MODE_CHARACTER_NAME) { continue; }
-                    if (info[INFO_MODE_HEAD] == INFO_MODE_HOVER) { continue; }
+                    if (info[INFO_MODE_HEAD] == INFO_MODE_CODE) { continue; }
+                    if (info[INFO_MODE_HEAD] == "hover") { continue; }
                     if (info[INFO_MODE_HEAD].EndsWith("wnd_comment")) { continue; }
                     int curLineCount = Int32.Parse(info[INFO_LINE_HEAD]);
                     string curLineContent = TransCommon.getBlockSingleText(
@@ -161,7 +247,8 @@ namespace Hoshi_Translator.PjProcessor
                                     foreach (Match m in stringMatch)
                                     {
                                         string sentence = m.Value.Substring(1, m.Value.Length - 2);
-                                        sentence = textSizeWrap(sentence, aWrapFont, wrapMax, aWrapString, wrapReplaceFilePath, out _);
+                                        sentence = textSizeWrap(sentence.Split(new string[] { "<br>" }, StringSplitOptions.None)
+                                            , aWrapFont, wrapMax, aWrapString, wrapReplaceFilePath, out _);
                                         line = line.Replace(m.Value, "\"" + sentence + "\"");
                                     }
                                     newBlockContent[i] = TransCommon.TRANSLATED_LINE_HEAD + line;
@@ -176,7 +263,8 @@ namespace Hoshi_Translator.PjProcessor
                                 else
                                 {
                                     newBlockContent[i] = TransCommon.TRANSLATED_LINE_HEAD +
-                                        textSizeWrap(line, aWrapFont, wrapMax, aWrapString, wrapReplaceFilePath, out _);
+                                        textSizeWrap(line.Split(new string[] { "<br>" }, StringSplitOptions.None)
+                                        , aWrapFont, wrapMax, aWrapString, wrapReplaceFilePath, out _);
                                 }
                             }
                         }
@@ -241,14 +329,31 @@ namespace Hoshi_Translator.PjProcessor
                                 MatchCollection paramMatch = Regex.Matches(sentence, "\".*?\"");
                                 foreach (Match m in paramMatch)
                                 {
-                                    sentence = sentence.Replace(m.Value,
-                                        m.Value.Replace(".", "&.").Replace(",", "&,"));
+                                    sentence = sentence.Replace(m.Value, symbolReplace(m.Value));
                                 }
                             }
                         }
                         else
                         {
-                            sentence = sentence.Replace(".", "&.").Replace(",", "&,");
+                            MatchCollection tempFuncMatches = Regex.Matches(sentence, @"\(.*?\);");
+                            if(tempFuncMatches.Count== 0)
+                            {
+                                sentence = symbolReplace(sentence);
+                            }
+                            else
+                            {
+                                List<string> splitSentence = new List<string>();
+                                int lastIndex = 0;
+                                foreach(Match aFuncMatch in tempFuncMatches)
+                                {
+                                    splitSentence.Add(symbolReplace(
+                                        sentence.Substring(lastIndex, aFuncMatch.Index- lastIndex)));
+                                    splitSentence.Add(aFuncMatch.Value);
+                                    lastIndex = aFuncMatch.Index + aFuncMatch.Length;
+                                }
+                                splitSentence.Add(symbolReplace(sentence.Substring(lastIndex)));
+                                sentence = String.Join("", splitSentence);
+                            }
                         }
                         sentence = base.convertCharacter(sentence, listCharVi, listCharJp);
                         toFileLines[orgLine] += sentence;
@@ -258,7 +363,13 @@ namespace Hoshi_Translator.PjProcessor
                 File.WriteAllLines(toFilePath, toFileLines, aOutputEncoding);
             }
         }
-
+        private string symbolReplace(string input)
+        {
+            string ret = input;
+            ret = Regex.Replace(ret, @"(?<!&)\.", "&.");
+            ret = Regex.Replace(ret, @"(?<!&),", "&,");
+            return ret;
+        }
 
     }
 }

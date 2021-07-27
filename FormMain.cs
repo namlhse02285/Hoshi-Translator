@@ -92,10 +92,30 @@ namespace Hoshi_Translator
                 case "common":
                     if (action.Equals("test"))
                     {
-                        string t1 = "{#TIPS_ＭＭＯＲＰＧ = true;$TIPS_on_ＭＭＯＲＰＧ = true;} ESO là tên viết tắt cho con game MMORPG mà tôi xem như cuộc sống của mình.";
-                        string reg = @"(^{.+?})( )";
-                        string regReplaceTo = @"$1";
-                        Debug.WriteLine(Regex.Replace(t1, reg, regReplaceTo));
+                        string strTest = "{	Stand(\"st梨深_私服_通常\",\"normal\", 300, @+200);}awkjedhiw . ,";
+                        string reg = @"\(.+?\);";
+                        MatchCollection tempFuncMatches = Regex.Matches(strTest, @"\(.*?\);");
+                        string sentence = strTest;
+                        if (tempFuncMatches.Count == 0)
+                        {
+                            sentence = sentence.Replace(".", "&.").Replace(",", "&,");
+                        }
+                        else
+                        {
+                            List<string> splitSentence = new List<string>();
+                            int lastIndex = 0;
+                            foreach (Match aFuncMatch in tempFuncMatches)
+                            {
+                                splitSentence.Add(sentence.Substring(lastIndex, aFuncMatch.Index)
+                                    .Replace(".", "&.").Replace(",", "&,"));
+                                splitSentence.Add(aFuncMatch.Value);
+                                lastIndex = aFuncMatch.Index + aFuncMatch.Length;
+                            }
+                            splitSentence.Add(sentence.Substring(lastIndex)
+                                .Replace(".", "&.").Replace(",", "&,"));
+                            sentence = String.Join("", splitSentence);
+                        }
+                        Debug.WriteLine(sentence);
                         //MessageBox.Show(Regex.IsMatch(t1, reg).ToString());
                         //MessageBox.Show(String.Format("[\"{0}\"]", "aaa"));
                         //Directory.Move(@"G:\s\u_all\u122\Watashi no H wa Watashi ni Makasete.", @"G:\s\u_all\u122\a1");
@@ -445,6 +465,83 @@ namespace Hoshi_Translator
 
                         rpgMVProcessor.fillDuplicate(fullText, transText, fillFilePath);
                     }
+                    if (action.Equals("ts_decode") || action.Equals("ts_encode"))
+                    {
+                        string inputDir = args[2];
+                        Encoding encoding = BuCommon.getEncodingFromString(args[3]);
+                        byte decodeKey = Byte.Parse(args[4]);
+                        string outputDir = args[5];
+                        string newExt = args[6];
+
+                        rpgMVProcessor.tsDecode(inputDir, encoding, decodeKey, outputDir, newExt);
+                    }
+                    if (action.Equals("nightmare_school_export"))
+                    {
+                        string inputDir = args[2];
+                        Encoding encoding = BuCommon.getEncodingFromString(args[3]);
+                        string outputDir = args[4];
+
+                        Directory.CreateDirectory(outputDir);
+                        foreach (string filePath in BuCommon.listFiles(inputDir))
+                        {
+                            string toFilePath = outputDir + "\\" + Path.GetFileName(filePath);
+                            string[] inputFileArr = File.ReadAllLines(filePath, encoding);
+                            string exportContent = "";
+                            for (int i = 0; i < inputFileArr.Length; i++)
+                            {
+                                string tempLine = inputFileArr[i].Trim();
+                                if (tempLine.Length== 0) { continue; }
+                                if (tempLine.StartsWith("@")) { continue; }
+                                if (tempLine.StartsWith("*")) { continue; }
+                                if (tempLine.StartsWith(";")) { continue; }
+                                Match charNameMatch = Regex.Match(inputFileArr[i], @"^\[.+?\]");
+
+                                Dictionary<string, string> headerInfo = new Dictionary<string, string>();
+                                headerInfo.Add(TransCommon.INFO_LINE_HEAD, (i + 1).ToString());
+                                List<string> tempBlock = new List<string>();
+                                string blockString = "";
+                                tempBlock.Add(TransCommon.genInfoString(headerInfo));
+                                tempBlock.Add(TransCommon.ORIGINAL_LINE_HEAD + inputFileArr[i]);
+                                if (charNameMatch.Success)
+                                {
+                                    tempBlock.Add(TransCommon.CHAR_NAME_LINE_HEAD + charNameMatch.Value);
+                                    tempBlock.Add(TransCommon.FULL_TEXT_BOX_LINE_HEAD
+                                        + inputFileArr[i].Substring(charNameMatch.Length).Replace("\\n", String.Empty));
+                                }
+                                else if(inputFileArr[i].ToLower().StartsWith("\\cl"))
+                                {
+                                    tempBlock.Add(TransCommon.CHAR_NAME_LINE_HEAD + "\\CL");
+                                    tempBlock.Add(TransCommon.FULL_TEXT_BOX_LINE_HEAD
+                                        + inputFileArr[i].Substring(3).Replace("\\n", String.Empty));
+                                }
+                                else
+                                {
+                                    tempBlock.Add(TransCommon.FULL_TEXT_BOX_LINE_HEAD
+                                        + inputFileArr[i].Replace("\\n", String.Empty));
+                                }
+                                tempBlock.Add(TransCommon.TRANSLATED_LINE_HEAD);
+                                tempBlock.Add("");
+
+                                foreach (string blockLine in tempBlock)
+                                {
+                                    blockString += blockLine + Environment.NewLine;
+                                }
+                                exportContent += blockString;
+                            }
+                            if(exportContent.Length> 0)
+                            {
+                                File.WriteAllText(toFilePath, exportContent, encoding);
+                            }
+                        }
+                    }
+                    if (action.Equals("nightmare_school_wrap"))
+                    {
+
+                    }
+                    if (action.Equals("nightmare_school_import"))
+                    {
+
+                    }
                     break;
                 case "rpg_vx_ace":
                     RpgVxAceProcessor rpgVxAceProcessor = new RpgVxAceProcessor();
@@ -610,6 +707,12 @@ namespace Hoshi_Translator
                 case "chaos":
                     ChaosProcessor chaosProcessor = new ChaosProcessor();
                     chaosProcessor.loadDefault(true);
+                    if (action.Equals("export"))
+                    {
+                        string inputFile = args[2];
+                        string outputDir = args[3];
+                        chaosProcessor.export(inputFile, outputDir);
+                    }
                     if (action.Equals("concat"))
                     {
                         string inputFile = args[2];

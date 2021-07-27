@@ -815,6 +815,23 @@ namespace Hoshi_Translator.PjProcessor
                 currentJsonPath.Substring(lastNumberMatch.Index+ lastNumberMatch.Length)
             );
         }
+        public void tsDecode(string inputDir, Encoding encoding, byte decodeKey, string outputDir, string newExt)
+        {
+            Directory.CreateDirectory(outputDir);
+            foreach (string filePath in BuCommon.listFiles(inputDir))
+            {
+                string[] decodeFileArr = Regex.Split(File.ReadAllText(filePath, encoding), string.Empty);
+                char[] arr = encoding.GetString(encoding.GetBytes(File.ReadAllText(filePath, encoding))).ToCharArray();
+                for (int i = 0; i < arr.Length; i++)
+                {
+                    arr[i] = Convert.ToChar(arr[i] ^ decodeKey);
+                }
+                string outputPath = String.Format("{0}\\{1}.{2}"
+                    , outputDir, Path.GetFileNameWithoutExtension(filePath), newExt);
+                File.WriteAllText(outputPath, new String(arr), encoding);
+            }
+        }
+
 
     }
 }
