@@ -1,6 +1,7 @@
 ﻿using org.mariuszgromada.math.mxparser;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -283,6 +284,34 @@ namespace Hoshi_Translator
                 }
                 String outputFile = outputDir + "\\" + Path.GetFileName(fromFilePath);
                 File.WriteAllText(outputFile, newFileContent, encoding);
+            }
+        }
+        public static void wrap(string inputDir, Encoding encoding, string lineFilterRegex, string outputDir)
+        {
+            Property aProp = new Property(AppConst.CONFIG_FILE);
+            aProp.reload();
+            Font wrapFont = new Font(aProp.get(Property.Common.WRAP_FONT_NAME),
+                float.Parse(aProp.get(Property.Common.WRAP_FONT_SIZE)));
+            int maxWrap = Int32.Parse(aProp.get(Property.Common.WRAP_MAX));
+            string wrapString = aProp.get(Property.Common.WRAP_STRING)
+                .Replace("<singlenewline>", "\n")
+                .Replace("<fullnewline>", "\r\n");
+            Directory.CreateDirectory(outputDir);
+            foreach (string fromFilePath in BuCommon.listFiles(inputDir))
+            {
+                string toFilePath = outputDir + "\\" + Path.GetFileName(fromFilePath);
+                string[] inputFileArr = File.ReadAllLines(fromFilePath, encoding);
+
+                for (int i = 0; i < inputFileArr.Length; i++)
+                {
+                    if (Regex.IsMatch(inputFileArr[i], lineFilterRegex))
+                    {
+                        inputFileArr[i] = PjProcessor.AbstractPjProcessor.textSizeWrap(
+                            inputFileArr[i].Split(new string[] { wrapString }, StringSplitOptions.None),
+                            wrapFont, maxWrap, wrapString, null,  out _);
+                    }
+                }
+                File.WriteAllLines(toFilePath, inputFileArr, encoding);
             }
         }
 

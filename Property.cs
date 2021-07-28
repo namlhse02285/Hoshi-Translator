@@ -97,7 +97,7 @@ namespace Hoshi_Translator
                 {
                     int index = line.IndexOf('=');
                     String key = line.Substring(0, index).Trim();
-                    String value = line.Substring(index + 1).Trim();
+                    String value = line.Substring(index + 1);
 
                     if ((value.StartsWith("\"") && value.EndsWith("\"")) ||
                         (value.StartsWith("'") && value.EndsWith("'")))

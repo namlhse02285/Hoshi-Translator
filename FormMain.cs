@@ -284,6 +284,14 @@ namespace Hoshi_Translator
                         TransCommon.updateTranslation(fromFile, fromEncoding,
                             orgLineHeader, transLineHeader, toFile, outputDir, searchFromBegin);
                     }
+                    if (action.Equals("wrap"))
+                    {
+                        string inputDir = args[2];
+                        Encoding encoding = BuCommon.getEncodingFromString(args[3]);
+                        string lineFilterRegex = args[4];
+                        string outputDir = args[5];
+                        TransCommon.wrap(inputDir, encoding, lineFilterRegex, outputDir);
+                    }
                     if (action.Equals("single_take_out_diff_filtered_line"))
                     {
                         string fromFilePath = args[2];
@@ -510,7 +518,7 @@ namespace Hoshi_Translator
                                 }
                                 else if(inputFileArr[i].ToLower().StartsWith("\\cl"))
                                 {
-                                    tempBlock.Add(TransCommon.CHAR_NAME_LINE_HEAD + "\\CL");
+                                    tempBlock.Add(TransCommon.CHAR_NAME_LINE_HEAD + "\\CL ");
                                     tempBlock.Add(TransCommon.FULL_TEXT_BOX_LINE_HEAD
                                         + inputFileArr[i].Substring(3).Replace("\\n", String.Empty));
                                 }
@@ -534,13 +542,42 @@ namespace Hoshi_Translator
                             }
                         }
                     }
-                    if (action.Equals("nightmare_school_wrap"))
-                    {
-
-                    }
                     if (action.Equals("nightmare_school_import"))
                     {
-
+                        string tranDir = args[2];
+                        string orgDir = args[3];
+                        string outputDir = args[4];
+                        Encoding encoding = BuCommon.getEncodingFromString("utf-8");
+                        Directory.CreateDirectory(outputDir);
+                        foreach (string filePath in BuCommon.listFiles(tranDir))
+                        {
+                            String orgFilePath = orgDir + "\\" + Path.GetFileNameWithoutExtension(filePath) + ".txt";
+                            string[] importFileContent = File.ReadAllLines(orgFilePath, encoding);
+                            String outputFilePath = outputDir + "\\" + Path.GetFileNameWithoutExtension(filePath) + ".txt";
+                            List<List<string>> allBlocks
+                                = TransCommon.getBlockText(File.ReadAllLines(filePath, encoding));
+                            foreach(List<string> aBlock in allBlocks)
+                            {
+                                Dictionary<string, string> blockInfo = TransCommon.getInfoFromString(aBlock[0]);
+                                string charName = TransCommon.getBlockSingleText(aBlock, TransCommon.CHAR_NAME_LINE_HEAD, false);
+                                string sentence = TransCommon.getBlockSingleText(aBlock, TransCommon.TRANSLATED_LINE_HEAD, true);
+                                if (Regex.IsMatch(charName, @"^\[.+?\]"))
+                                {
+                                    //if (Regex.IsMatch(charName, @"^\[.+?\]\d+"))
+                                    //{
+                                    //    string color = charName.Substring(charName.IndexOf("]")+ 1);
+                                    //    charName = Regex.Replace(charName, @"\]\d+", "\\C[0]]");
+                                    //    charName = "[\\C[" + color + "]" + charName.Substring(1);
+                                    //}
+                                    //charName = charName.Substring(1, charName.Length - 2);
+                                    //charName = "\\>_    \\C[5]" + charName + "\\C[0]\\<\\n";
+                                    sentence = "「"+ sentence+ "」";
+                                }
+                                importFileContent[Int32.Parse(blockInfo[TransCommon.INFO_LINE_HEAD])- 1]
+                                    = charName + sentence;
+                            }
+                            File.WriteAllLines(outputFilePath, importFileContent, encoding);
+                        }
                     }
                     break;
                 case "rpg_vx_ace":
