@@ -46,20 +46,25 @@ namespace Hoshi_Translator
         }
         private static void commonTextBox_DragDrop(object sender, DragEventArgs e)
         {
+            int currentLine = ((TextBox)sender).GetLineFromCharIndex(((TextBox)sender).SelectionStart);
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 
                 if (System.IO.File.Exists(files[0]) || System.IO.Directory.Exists(files[0]))
                 {
-                    if (((TextBox)sender).Text.Length > 0)
+                    string[] curValue = ((TextBox)sender).Lines;
+                    curValue[currentLine] = files[0];
+                    ((TextBox)sender).Lines = curValue;
+                    ((TextBox)sender).SelectionStart = 0;
+                    for (int i = 0; i <= currentLine; i++)
                     {
-                        ((TextBox)sender).Text += (Environment.NewLine + files[0]);
+                        SendKeys.Send("{END}");
+                        SendKeys.Send("{END}");
+                        SendKeys.Send("{DOWN}");
                     }
-                    else
-                    {
-                        ((TextBox)sender).Text = files[0];
-                    }
+                    SendKeys.Send("{HOME}");
+                    SendKeys.Send("{HOME}");
                 }
             }
         }
