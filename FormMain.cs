@@ -260,17 +260,17 @@ namespace Hoshi_Translator
                             File.Copy(filePath, newFilePath, true);
                         }
                     }
-                    if (action.Equals("property_and_text_filter"))
+                    if (action.Equals("property_and_line_filter"))
                     {
                         string inputFile = args[2];
                         Encoding encoding = BuCommon.getEncodingFromString(args[3]);
                         string propName = args[4];
                         string expressionString = args[5];
-                        bool isAccept = args[6].Equals("accept");
-                        string regexStr = args[7];
+                        string regexStr = args[6];
+                        bool isAccept = args[7].Equals("accept");
                         string outputDir = args[8];
-                        TransCommon.propertyAndTextFilter(propName, expressionString,
-                            isAccept, regexStr, inputFile, encoding, outputDir);
+                        TransCommon.propertyAndTextFilter(inputFile, encoding,
+                            propName, expressionString, regexStr, isAccept, outputDir);
                     }
                     if (action.Equals("update_translation"))
                     {

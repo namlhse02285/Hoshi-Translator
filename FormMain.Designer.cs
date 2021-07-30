@@ -33,9 +33,9 @@ namespace Hoshi_Translator
             this.mainMenuStrip = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openGuideFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openConfigFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.executeCmd = new System.Windows.Forms.Button();
             this.tbxCommand = new System.Windows.Forms.TextBox();
-            this.openConfigFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -61,9 +61,16 @@ namespace Hoshi_Translator
             // openGuideFileToolStripMenuItem
             // 
             this.openGuideFileToolStripMenuItem.Name = "openGuideFileToolStripMenuItem";
-            this.openGuideFileToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.openGuideFileToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
             this.openGuideFileToolStripMenuItem.Text = "Open guide file";
             this.openGuideFileToolStripMenuItem.Click += new System.EventHandler(this.openGuideFileToolStripMenuItem_Click);
+            // 
+            // openConfigFileToolStripMenuItem
+            // 
+            this.openConfigFileToolStripMenuItem.Name = "openConfigFileToolStripMenuItem";
+            this.openConfigFileToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.openConfigFileToolStripMenuItem.Text = "Open Config File";
+            this.openConfigFileToolStripMenuItem.Click += new System.EventHandler(this.openConfigFileToolStripMenuItem_Click);
             // 
             // executeCmd
             // 
@@ -91,14 +98,8 @@ namespace Hoshi_Translator
             this.tbxCommand.Name = "tbxCommand";
             this.tbxCommand.Size = new System.Drawing.Size(775, 371);
             this.tbxCommand.TabIndex = 1;
+            this.tbxCommand.WordWrap = false;
             this.tbxCommand.KeyUp += new System.Windows.Forms.KeyEventHandler(this.tbxCommand_KeyUp);
-            // 
-            // openConfigFileToolStripMenuItem
-            // 
-            this.openConfigFileToolStripMenuItem.Name = "openConfigFileToolStripMenuItem";
-            this.openConfigFileToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.openConfigFileToolStripMenuItem.Text = "Open Config File";
-            this.openConfigFileToolStripMenuItem.Click += new System.EventHandler(this.openConfigFileToolStripMenuItem_Click);
             // 
             // FormMain
             // 

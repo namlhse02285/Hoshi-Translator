@@ -1,5 +1,4 @@
-﻿using org.mariuszgromada.math.mxparser;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -126,24 +125,11 @@ namespace Hoshi_Translator
             return (addSeparator ? INFO_SEPARATOR_STR : "") + infoHeader + INFO_PARAM_SEPARATOR_STR+ " " + value;
         }
 
-        public static void propertyAndTextFilter(string propName, string expressionString,
-            bool isAccept, string regexStr, string inputFile, Encoding encoding, string outputDir)
+        public static void propertyAndTextFilter(string inputFile, Encoding encoding,
+            string propName, string propFilterRegexStr,
+            string lineFilterRegexStr, bool isAccept, string outputDir)
         {
             Directory.CreateDirectory(outputDir);
-
-            Expression expression = new Expression(expressionString);
-            if (Regex.IsMatch(expressionString, @"'.+?'"))
-            {
-                MatchCollection matchCollection = Regex.Matches(expressionString, @"'.+?'");
-                foreach (Match aMatch in matchCollection)
-                {
-                    expressionString = expressionString.Replace(
-                        aMatch.Value, BuCommon.stringToNumber(aMatch.Value.Trim('\'')).ToString());
-                }
-                expression = new Expression(expressionString);
-            }
-            expression.defineArgument(propName, 0);
-
             foreach (string filePath in BuCommon.listFiles(inputFile))
             {
                 string newFileContent = "";
@@ -156,20 +142,18 @@ namespace Hoshi_Translator
                         newFileContent += TransCommon.blockToString(aBlock);
                         continue;
                     }
-                    expression.setArgumentValue(propName, BuCommon.stringToNumber(headerInfo[propName]));
-                    double result = expression.calculate();
-                    if (expression.calculate()== 0)
+                    string propValue = headerInfo[propName];
+                    if (!Regex.IsMatch(propValue, propFilterRegexStr))
                     {
                         newFileContent += TransCommon.blockToString(aBlock);
                         continue;
                     }
-                    string orgText = getBlockSingleText(aBlock, TransCommon.ORIGINAL_LINE_HEAD, false);
-                    if (isAccept && Regex.IsMatch(orgText, regexStr))
+                    bool found = false;
+                    foreach(string aLine in aBlock)
                     {
-                        newFileContent += TransCommon.blockToString(aBlock);
-                        continue;
+                        if (Regex.IsMatch(aLine, lineFilterRegexStr)) { found = true; break; }
                     }
-                    if (!isAccept && !Regex.IsMatch(orgText, regexStr))
+                    if ((isAccept && found) || (!isAccept && !found))
                     {
                         newFileContent += TransCommon.blockToString(aBlock);
                         continue;
