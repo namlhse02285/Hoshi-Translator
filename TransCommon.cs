@@ -314,6 +314,17 @@ namespace Hoshi_Translator
                 File.WriteAllLines(toFilePath, inputFileArr, encoding);
             }
         }
+        public static string quoteSentenceBaseOnJp(string baseText, string sentence)
+        {
+            string ret = sentence;
+            if (baseText.StartsWith("「") && !sentence.StartsWith("「")) { ret= "「" + ret; }
+            if (baseText.StartsWith("『") && !sentence.StartsWith("『")) { ret= "『" + ret; }
+            if (baseText.StartsWith("（") && !sentence.StartsWith("（")) { ret= "（" + ret; }
+            if (baseText.EndsWith("」") && !sentence.EndsWith("」")) { ret+= "」"; }
+            if (baseText.EndsWith("』") && !sentence.EndsWith("』")) { ret+= "』"; }
+            if (baseText.EndsWith("）") && !sentence.EndsWith("）")) { ret+= "）"; }
+            return ret;
+        }
 
 
     }

@@ -561,6 +561,7 @@ namespace Hoshi_Translator
                                 Dictionary<string, string> blockInfo = TransCommon.getInfoFromString(aBlock[0]);
                                 string charName = TransCommon.getBlockSingleText(aBlock, TransCommon.CHAR_NAME_LINE_HEAD, false);
                                 string sentence = TransCommon.getBlockSingleText(aBlock, TransCommon.TRANSLATED_LINE_HEAD, true);
+                                string fullText = TransCommon.getBlockSingleText(aBlock, TransCommon.FULL_TEXT_BOX_LINE_HEAD, true);
                                 if (Regex.IsMatch(charName, @"^\[.+?\]"))
                                 {
                                     //if (Regex.IsMatch(charName, @"^\[.+?\]\d+"))
@@ -571,7 +572,7 @@ namespace Hoshi_Translator
                                     //}
                                     //charName = charName.Substring(1, charName.Length - 2);
                                     //charName = "\\>_    \\C[5]" + charName + "\\C[0]\\<\\n";
-                                    sentence = "「"+ sentence+ "」";
+                                    sentence = TransCommon.quoteSentenceBaseOnJp(fullText, sentence);
                                 }
                                 importFileContent[Int32.Parse(blockInfo[TransCommon.INFO_LINE_HEAD])- 1]
                                     = charName + sentence;
