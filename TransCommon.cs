@@ -282,7 +282,7 @@ namespace Hoshi_Translator
                     }
                     newFileContent += blockToString(toBlocks[i]);
                 }
-                String outputFile = outputDir + "\\" + Path.GetFileName(fromFilePath);
+                String outputFile = outputDir + "\\" + Path.GetFileName(toFilePath);
                 File.WriteAllText(outputFile, newFileContent, encoding);
             }
         }
