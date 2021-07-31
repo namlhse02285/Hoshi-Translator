@@ -290,7 +290,12 @@ namespace Hoshi_Translator
                         Encoding encoding = BuCommon.getEncodingFromString(args[3]);
                         string lineFilterRegex = args[4];
                         string outputDir = args[5];
-                        TransCommon.wrap(inputDir, encoding, lineFilterRegex, outputDir);
+                        string configFilePath= null;
+                        if(args.Length> 6)
+                        {
+                            configFilePath = args[6];
+                        }
+                        TransCommon.wrap(inputDir, encoding, lineFilterRegex, configFilePath, outputDir);
                     }
                     if (action.Equals("single_take_out_diff_filtered_line"))
                     {
@@ -771,6 +776,24 @@ namespace Hoshi_Translator
                         string orgDir = args[3];
                         string outputDir = args[4];
                         chaosProcessor.import(inputFile, orgDir, outputDir);
+                    }
+                    break;
+                case "kirikiri_json":
+                    KirikiriJsonProcessor kirikiriJsonProcessor = new KirikiriJsonProcessor();
+                    kirikiriJsonProcessor.loadDefault(true);
+                    if (action.Equals("export"))
+                    {
+                        string inputFile = args[2];
+                        string outputDir = args[3];
+                        string jsonPathFilterRegex = args[4];
+                        kirikiriJsonProcessor.export(inputFile, outputDir, jsonPathFilterRegex);
+                    }
+                    if (action.Equals("import"))
+                    {
+                        string inputFile = args[2];
+                        string orgDir = args[3];
+                        string outputDir = args[4];
+                        kirikiriJsonProcessor.import(inputFile, orgDir, outputDir);
                     }
                     break;
             }

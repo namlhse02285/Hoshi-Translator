@@ -227,8 +227,10 @@ namespace Hoshi_Translator.PjProcessor
                 {
                     List<string> tempBlock = new List<string>();
                     string orgText = gotProp.ToString(Newtonsoft.Json.Formatting.None);
-                    orgText = orgText.Substring(0, orgText.Length - 1);
-                    orgText = orgText.TrimStart('\"');
+                    if (gotProp.Type == JTokenType.String)
+                    {
+                        orgText = orgText.Substring(1, orgText.Length - 2);
+                    }
                     if (orgText.Length == 0) { continue; }
 
                     tempBlock.Add(TransCommon.TRANS_BLOCK_INFO_HEADER

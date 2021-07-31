@@ -54,7 +54,7 @@ namespace Hoshi_Translator
                 {
                     ret += (spaceBetween && ret.Length> 0 ? " " : "") + aLine;
                 }
-                if (aLine.StartsWith(header))
+                if (null!= header && aLine.StartsWith(header))
                 {
                     return aLine.Substring(header.Length);
                 }
@@ -240,7 +240,7 @@ namespace Hoshi_Translator
                             {
                                 if (!fromBlocks[j][k].StartsWith("<"))
                                 {
-                                    toBlocks[i][transLineIndex] += Environment.NewLine + fromTransTxt;
+                                    toBlocks[i][transLineIndex] += Environment.NewLine + fromBlocks[j][k];
                                 }
                             }
                             pauseBlockIndex = searchFromBegin ? 0 : (j + 1);
@@ -270,7 +270,8 @@ namespace Hoshi_Translator
                 File.WriteAllText(outputFile, newFileContent, encoding);
             }
         }
-        public static void wrap(string inputDir, Encoding encoding, string lineFilterRegex, string outputDir)
+        public static void wrap(string inputDir, Encoding encoding,
+            string lineFilterRegex, string configFilePath, string outputDir)
         {
             Property aProp = new Property(AppConst.CONFIG_FILE);
             aProp.reload();
@@ -292,7 +293,7 @@ namespace Hoshi_Translator
                     {
                         inputFileArr[i] = PjProcessor.AbstractPjProcessor.textSizeWrap(
                             inputFileArr[i].Split(new string[] { wrapString }, StringSplitOptions.None),
-                            wrapFont, maxWrap, wrapString, null,  out _);
+                            wrapFont, maxWrap, wrapString, configFilePath,  out _);
                     }
                 }
                 File.WriteAllLines(toFilePath, inputFileArr, encoding);
@@ -304,9 +305,13 @@ namespace Hoshi_Translator
             if (baseText.StartsWith("「") && !sentence.StartsWith("「")) { ret= "「" + ret; }
             if (baseText.StartsWith("『") && !sentence.StartsWith("『")) { ret= "『" + ret; }
             if (baseText.StartsWith("（") && !sentence.StartsWith("（")) { ret= "（" + ret; }
+            if (baseText.StartsWith("“") && !sentence.StartsWith("“")) { ret= "“" + ret; }
+            if (baseText.StartsWith("\"") && !sentence.StartsWith("\"")) { ret= "\"" + ret; }
             if (baseText.EndsWith("」") && !sentence.EndsWith("」")) { ret+= "」"; }
             if (baseText.EndsWith("』") && !sentence.EndsWith("』")) { ret+= "』"; }
             if (baseText.EndsWith("）") && !sentence.EndsWith("）")) { ret+= "）"; }
+            if (baseText.EndsWith("”") && !sentence.EndsWith("”")) { ret+= "”"; }
+            if (baseText.EndsWith("\"") && !sentence.EndsWith("\"")) { ret+= "\""; }
             return ret;
         }
 
