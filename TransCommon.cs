@@ -222,7 +222,7 @@ namespace Hoshi_Translator
                         string fromOrgTxt = getBlockSingleText(fromBlocks[j], orgLineHeader, false);
                         string fromTransTxt = getBlockSingleText(fromBlocks[j], transLineHeader, false);
                         Dictionary<string, string> transInfo = getInfoFromString(fromBlocks[j][0]);
-                        if (transInfo.ContainsKey(INFO_NOTE_HEAD)){ note = transInfo[INFO_NOTE_HEAD]; }
+                        note = transInfo.ContainsKey(INFO_NOTE_HEAD) ? transInfo[INFO_NOTE_HEAD] : "";
 
                         if (fromOrgTxt.Equals(toOrgTxt))
                         {
@@ -299,7 +299,7 @@ namespace Hoshi_Translator
                 File.WriteAllLines(toFilePath, inputFileArr, encoding);
             }
         }
-        public static string quoteSentenceBaseOnJp(string baseText, string sentence)
+        public static string quoteSentenceBaseOnOrg(string baseText, string sentence)
         {
             string ret = sentence;
             if (baseText.StartsWith("「") && !sentence.StartsWith("「")) { ret= "「" + ret; }

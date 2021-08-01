@@ -111,7 +111,7 @@ namespace Hoshi_Translator.PjProcessor
                     string orgText = TransCommon.getBlockSingleText(
                         aBlock, TransCommon.ORIGINAL_LINE_HEAD, false);
                     Dictionary<string, string> info = TransCommon.getInfoFromString(aBlock[0]);
-                    transText = TransCommon.quoteSentenceBaseOnJp(orgText, transText);
+                    transText = TransCommon.quoteSentenceBaseOnOrg(orgText, transText);
 
                     jTokenRoot.SelectToken(info[INFO_JSONPATH_HEAD]).Replace(transText);
                 }

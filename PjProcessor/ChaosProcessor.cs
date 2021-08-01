@@ -13,10 +13,8 @@ namespace Hoshi_Translator.PjProcessor
     {
         private int SIZE_OF_CHARACTER_I;
 
-        public static readonly string INFO_MODE_HEAD = "Mode";
         public static readonly string INFO_MODE_CODE = "code";
         public static readonly string INFO_MODE_TEXT = "text";
-        public static readonly string INFO_LINE_HEAD = "Line";
 
         private List<char> listCharVi = new List<char>()
         {
@@ -144,11 +142,11 @@ namespace Hoshi_Translator.PjProcessor
                         continue;
                     }
                     Dictionary<string, string> info = TransCommon.getInfoFromString(fileBlocks[i][0]);
-                    if (info[INFO_MODE_HEAD] == TransCommon.INFO_MODE_CHARACTER_NAME) { continue; }
-                    if (info[INFO_MODE_HEAD] == INFO_MODE_CODE) { continue; }
-                    if (info[INFO_MODE_HEAD] == "hover") { continue; }
-                    if (info[INFO_MODE_HEAD].EndsWith("wnd_comment")) { continue; }
-                    int curLineCount = Int32.Parse(info[INFO_LINE_HEAD]);
+                    if (info[TransCommon.INFO_MODE_HEAD] == TransCommon.INFO_MODE_CHARACTER_NAME) { continue; }
+                    if (info[TransCommon.INFO_MODE_HEAD] == INFO_MODE_CODE) { continue; }
+                    if (info[TransCommon.INFO_MODE_HEAD] == "hover") { continue; }
+                    if (info[TransCommon.INFO_MODE_HEAD].EndsWith("wnd_comment")) { continue; }
+                    int curLineCount = Int32.Parse(info[TransCommon.INFO_LINE_HEAD]);
                     string curLineContent = TransCommon.getBlockSingleText(
                         fileBlocks[i], TransCommon.TRANSLATED_LINE_HEAD, false);
                     if (curLineContent.EndsWith(";")) { continue; }
@@ -164,7 +162,7 @@ namespace Hoshi_Translator.PjProcessor
                         if (i + delta >= fileBlocks.Count) { delta--; break; }
                         Dictionary<string, string> nextInfo =
                             TransCommon.getInfoFromString(fileBlocks[i+ delta][0]);
-                        int nextLineCount = Int32.Parse(nextInfo[INFO_LINE_HEAD]);
+                        int nextLineCount = Int32.Parse(nextInfo[TransCommon.INFO_LINE_HEAD]);
                         if(nextLineCount- curLineCount== delta)
                         {
                             string nextLineContent= TransCommon.getBlockSingleText(
@@ -204,7 +202,7 @@ namespace Hoshi_Translator.PjProcessor
                     int wrapMax = -1;
                     Dictionary<string, string> info = TransCommon.getInfoFromString(aBlock[0]);
                     List<string> newBlockContent = aBlock;
-                    switch (info[INFO_MODE_HEAD])
+                    switch (info[TransCommon.INFO_MODE_HEAD])
                     {
                         case "box01":
                         case "@box01":
@@ -303,8 +301,8 @@ namespace Hoshi_Translator.PjProcessor
                         if (aBlock[i].StartsWith(TransCommon.TRANS_BLOCK_INFO_HEADER))
                         {
                             Dictionary<string, string> info = TransCommon.getInfoFromString(aBlock[i]);
-                            orgLine = Int32.Parse(info[INFO_LINE_HEAD])- 1;
-                            if (info[INFO_MODE_HEAD].Equals(TransCommon.INFO_MODE_CHARACTER_NAME))
+                            orgLine = Int32.Parse(info[TransCommon.INFO_LINE_HEAD])- 1;
+                            if (info[TransCommon.INFO_MODE_HEAD].Equals(TransCommon.INFO_MODE_CHARACTER_NAME))
                             {//Ignore, dont import char name block
                                 break;
                             }

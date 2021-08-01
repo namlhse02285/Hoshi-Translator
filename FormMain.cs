@@ -577,7 +577,7 @@ namespace Hoshi_Translator
                                     //}
                                     //charName = charName.Substring(1, charName.Length - 2);
                                     //charName = "\\>_    \\C[5]" + charName + "\\C[0]\\<\\n";
-                                    sentence = TransCommon.quoteSentenceBaseOnJp(fullText, sentence);
+                                    sentence = TransCommon.quoteSentenceBaseOnOrg(fullText, sentence);
                                 }
                                 importFileContent[Int32.Parse(blockInfo[TransCommon.INFO_LINE_HEAD])- 1]
                                     = charName + sentence;
