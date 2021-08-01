@@ -69,7 +69,7 @@ namespace Hoshi_Translator
                     }
                     oneCommand.Clear();
                 }
-                else
+                else if(!commandLine.StartsWith(TransCommon.COMMENT_STR))
                 {
                     oneCommand.Add(commandLine);
                 }
