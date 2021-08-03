@@ -137,11 +137,7 @@ namespace Hoshi_Translator
                         Encoding encoding = BuCommon.getEncodingFromString(args[3]);
                         string filterRegex = args[4];
                         string outputDir = args[5];
-                        string ruleFile = AppConst.REPLACE_FILE;
-                        if (args.Length > 6)
-                        {
-                            ruleFile = args[6];
-                        }
+                        string ruleFile = args.Length > 6 ? args[6] : AppConst.REPLACE_FILE;
                         Directory.CreateDirectory(outputDir);
                         List<KeyValuePair<string, string>> relaceList
                             = BuCommon.getReplaceList(ruleFile, AppConst.REPLACE_SEPARATOR);
@@ -177,11 +173,7 @@ namespace Hoshi_Translator
                         Encoding encoding = BuCommon.getEncodingFromString(args[3]);
                         string filterRegex = args[4];
                         string outputDir = args[5];
-                        string ruleFile = AppConst.REGEX_REPLACE_FILE;
-                        if (args.Length > 6)
-                        {
-                            ruleFile = args[6];
-                        }
+                        string ruleFile = args.Length > 6 ? args[6] : AppConst.REGEX_REPLACE_FILE;
                         Directory.CreateDirectory(outputDir);
                         List<KeyValuePair<string, string>> relaceList
                             = BuCommon.getReplaceList(ruleFile, AppConst.REPLACE_SEPARATOR);
@@ -290,11 +282,7 @@ namespace Hoshi_Translator
                         Encoding encoding = BuCommon.getEncodingFromString(args[3]);
                         string lineFilterRegex = args[4];
                         string outputDir = args[5];
-                        string configFilePath= null;
-                        if(args.Length> 6)
-                        {
-                            configFilePath = args[6];
-                        }
+                        string configFilePath= args.Length > 6 ? args[6] : AppConst.CONFIG_FILE;
                         TransCommon.wrap(inputDir, encoding, lineFilterRegex, configFilePath, outputDir);
                     }
                     if (action.Equals("single_take_out_diff_filtered_line"))
@@ -303,11 +291,7 @@ namespace Hoshi_Translator
                         Encoding encoding = BuCommon.getEncodingFromString(args[3]);
                         string filterRegex= args[4];
                         string takeOutRegex= args[5];
-                        string outputFile = AppConst.OUTPUT_FILE;
-                        if(args.Length> 6)
-                        {
-                            outputFile = args[6];
-                        }
+                        string outputFile = args.Length > 6 ? args[6] : AppConst.OUTPUT_FILE;
                         List<string> outputContent = new List<string>();
                         foreach (string oneFilePath in BuCommon.listFiles(fromFilePath))
                         {
@@ -434,8 +418,7 @@ namespace Hoshi_Translator
                     {
                         string inputDir = args[2];
                         string outputDir = args[3];
-                        string wrapReplaceFilePath = null;
-                        if (args.Length > 4) { wrapReplaceFilePath = args[4]; }
+                        string wrapReplaceFilePath = args.Length > 4 ? args[4] : null;
                         rpgMVProcessor.wrap(inputDir, outputDir, wrapReplaceFilePath);
                     }
                     if (action.Equals("import"))
@@ -504,7 +487,7 @@ namespace Hoshi_Translator
                             {
                                 string tempLine = inputFileArr[i].Trim();
                                 if (tempLine.Length== 0) { continue; }
-                                if (tempLine.StartsWith("@")) { continue; }
+                                if (Regex.IsMatch(tempLine, @"@(?!select)")) { continue; }
                                 if (tempLine.StartsWith("*")) { continue; }
                                 if (tempLine.StartsWith(";")) { continue; }
                                 Match charNameMatch = Regex.Match(inputFileArr[i], @"^\[.+?\]");
@@ -569,14 +552,6 @@ namespace Hoshi_Translator
                                 string fullText = TransCommon.getBlockSingleText(aBlock, TransCommon.FULL_TEXT_BOX_LINE_HEAD, true);
                                 if (Regex.IsMatch(charName, @"^\[.+?\]"))
                                 {
-                                    //if (Regex.IsMatch(charName, @"^\[.+?\]\d+"))
-                                    //{
-                                    //    string color = charName.Substring(charName.IndexOf("]")+ 1);
-                                    //    charName = Regex.Replace(charName, @"\]\d+", "\\C[0]]");
-                                    //    charName = "[\\C[" + color + "]" + charName.Substring(1);
-                                    //}
-                                    //charName = charName.Substring(1, charName.Length - 2);
-                                    //charName = "\\>_    \\C[5]" + charName + "\\C[0]\\<\\n";
                                     sentence = TransCommon.quoteSentenceBaseOnOrg(fullText, sentence);
                                 }
                                 importFileContent[Int32.Parse(blockInfo[TransCommon.INFO_LINE_HEAD])- 1]
@@ -642,8 +617,7 @@ namespace Hoshi_Translator
                     {
                         string inputDir = args[2];
                         string outputDir = args[3];
-                        string wrapReplaceFilePath = null;
-                        if (args.Length > 4) { wrapReplaceFilePath = args[4]; }
+                        string wrapReplaceFilePath = args.Length > 4 ? args[4] : null;
                         rpgVxAceProcessor.wrap(inputDir, outputDir, wrapReplaceFilePath);
                     }
                     if (action.Equals("import"))

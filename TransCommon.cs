@@ -273,7 +273,7 @@ namespace Hoshi_Translator
         public static void wrap(string inputDir, Encoding encoding,
             string lineFilterRegex, string configFilePath, string outputDir)
         {
-            Property aProp = new Property(AppConst.CONFIG_FILE);
+            Property aProp = new Property(configFilePath);
             aProp.reload();
             Font wrapFont = new Font(aProp.get(Property.Common.WRAP_FONT_NAME),
                 float.Parse(aProp.get(Property.Common.WRAP_FONT_SIZE)));
@@ -293,7 +293,7 @@ namespace Hoshi_Translator
                     {
                         inputFileArr[i] = PjProcessor.AbstractPjProcessor.textSizeWrap(
                             inputFileArr[i].Split(new string[] { wrapString }, StringSplitOptions.None),
-                            wrapFont, maxWrap, wrapString, configFilePath,  out _);
+                            wrapFont, maxWrap, wrapString, null,  out _);
                     }
                 }
                 File.WriteAllLines(toFilePath, inputFileArr, encoding);
