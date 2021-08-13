@@ -1,8 +1,6 @@
 ﻿using Hoshi_Translator.PjProcessor;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -92,30 +90,8 @@ namespace Hoshi_Translator
                 case "common":
                     if (action.Equals("test"))
                     {
-                        string strTest = "{	Stand(\"st梨深_私服_通常\",\"normal\", 300, @+200);}awkjedhiw . ,";
-                        string reg = @"\(.+?\);";
-                        MatchCollection tempFuncMatches = Regex.Matches(strTest, @"\(.*?\);");
-                        string sentence = strTest;
-                        if (tempFuncMatches.Count == 0)
-                        {
-                            sentence = sentence.Replace(".", "&.").Replace(",", "&,");
-                        }
-                        else
-                        {
-                            List<string> splitSentence = new List<string>();
-                            int lastIndex = 0;
-                            foreach (Match aFuncMatch in tempFuncMatches)
-                            {
-                                splitSentence.Add(sentence.Substring(lastIndex, aFuncMatch.Index)
-                                    .Replace(".", "&.").Replace(",", "&,"));
-                                splitSentence.Add(aFuncMatch.Value);
-                                lastIndex = aFuncMatch.Index + aFuncMatch.Length;
-                            }
-                            splitSentence.Add(sentence.Substring(lastIndex)
-                                .Replace(".", "&.").Replace(",", "&,"));
-                            sentence = String.Join("", splitSentence);
-                        }
-                        Debug.WriteLine(sentence);
+                        int cellColumn = Convert.ToInt32('A');
+                        Debug.WriteLine(Convert.ToChar(cellColumn));
                         //MessageBox.Show(Regex.IsMatch(t1, reg).ToString());
                         //MessageBox.Show(String.Format("[\"{0}\"]", "aaa"));
                         //Directory.Move(@"G:\s\u_all\u122\Watashi no H wa Watashi ni Makasete.", @"G:\s\u_all\u122\a1");
@@ -321,6 +297,15 @@ namespace Hoshi_Translator
                         {
                             File.WriteAllLines(outputFile, outputContent, encoding);
                         }
+                    }
+                    if (action.Equals("convert_exported_file_to_excel"))
+                    {
+                        OfficeOpenXml.ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+                        string inputDir = args[2];
+                        Encoding encoding = BuCommon.getEncodingFromString(args[3]);
+                        string headerListStr = args[4];
+                        string outputDir = args[5];
+                        TransCommon.convertExportedFileToExcel(inputDir, encoding, headerListStr, outputDir);
                     }
                     break;
                 case "file":
@@ -691,11 +676,12 @@ namespace Hoshi_Translator
                         string outputDir = args[3];
                         siglusProcessor.simpleExport(inputFile, outputDir);
                     }
-                    if (action.Equals("export_eng"))
+                    if (action.Equals("export"))
                     {
                         string inputFile = args[2];
-                        string outputDir = args[3];
-                        siglusProcessor.exportEng(inputFile, outputDir);
+                        string lang = args[3];
+                        string outputDir = args[4];
+                        siglusProcessor.export(inputFile, outputDir, lang);
                     }
                     if (action.Equals("import"))
                     {
@@ -768,6 +754,17 @@ namespace Hoshi_Translator
                         string orgDir = args[3];
                         string outputDir = args[4];
                         kirikiriJsonProcessor.import(inputFile, orgDir, outputDir);
+                    }
+                    break;
+                case "vinahoshi":
+                    VinaHoshiProcessor vinaHoshiProcessor = new VinaHoshiProcessor();
+                    if (action.Equals("add_media_info"))
+                    {
+                        string ffmpegPath = args[2];
+                        string inputFile = args[3];
+                        string separator = args[4];
+                        string outputDir = args[5];
+                        vinaHoshiProcessor.addMediaInfoToFileNam(ffmpegPath, inputFile, separator, outputDir);
                     }
                     break;
             }

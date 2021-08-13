@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Hoshi_Translator
 {
@@ -22,6 +23,22 @@ namespace Hoshi_Translator
             {
                 return Encoding.GetEncoding(str);
             }
+        }
+
+        public static int timeStringToMs(string timeStr)
+        {//Format HH:MM:SS.UU
+            if(null== timeStr) { return 0; }
+            string[] splitedTimeStr = Regex.Split(timeStr, ":");
+            int ret = 0;
+            try
+            {
+                int hours = Int32.Parse(splitedTimeStr[0]) * 60 * 60 * 1000;
+                int minutes = Int32.Parse(splitedTimeStr[1]) * 60 * 1000;
+                int seconds = Convert.ToInt32(Double.Parse(splitedTimeStr[2]) * 1000);
+                ret= hours + minutes + seconds;
+            }
+            catch { return 0; }
+            return ret;
         }
 
         public static string convertCharacter(string input, List<char> fromList, List<char> toList)

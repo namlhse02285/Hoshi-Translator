@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OfficeOpenXml;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -45,19 +46,91 @@ namespace Hoshi_Translator
             }
             return ret.ToString();
         }
+        public static void convertExportedFileToExcel(string inputFile,
+            Encoding encoding, string headerListStr, string outputDir)
+        {
+            Directory.CreateDirectory(outputDir);
+            List<string> headerList = Regex.Split(headerListStr, ",").ToList();
+            foreach (string filePath in BuCommon.listFiles(inputFile))
+            {
+                List<List<string>> allBlocks = getBlockText(File.ReadAllLines(filePath, encoding));
+                FileInfo newExcelFileInfo = new FileInfo(
+                    outputDir + "\\" + Path.GetFileNameWithoutExtension(filePath) + ".xlsx");
+                if (newExcelFileInfo.Exists) { newExcelFileInfo.Delete(); }
+                ExcelPackage workbook = new ExcelPackage(newExcelFileInfo);
+                workbook.Workbook.Properties.Title = Path.GetFileName(filePath);
+                ExcelWorksheet worksheet = workbook.Workbook.Worksheets.Add(Path.GetFileNameWithoutExtension(filePath));
+                worksheet.DefaultColWidth = 70;
+                int FIRST_COLUMN_ASCII= Convert.ToInt32('A');
+
+                int cellColumn = FIRST_COLUMN_ASCII;
+                int cellRow = 1;
+                headerList.ForEach((oneHeader) =>{
+                    worksheet.Cells[Convert.ToChar(cellColumn) + cellRow.ToString()].Value = oneHeader;
+                    cellColumn++;
+                });
+                worksheet.View.FreezePanes(2, 1);
+
+                foreach (List<string> oneBlock in allBlocks)
+                {
+                    cellRow++;
+                    worksheet.Row(cellRow).Style.Font.SetFromFont(new Font("Arial", 16));
+                    bool isTakeThisTextOfHeader = false;
+                    foreach (string oneBlockLine in oneBlock)
+                    {
+                        string tempCell = Convert.ToChar(cellColumn) + cellRow.ToString();
+                        Match headerMatch = Regex.Match(oneBlockLine, @"^<.+?>");
+                        if (headerMatch.Success)
+                        {
+                            isTakeThisTextOfHeader = false;
+                            for (int i = 0; i < headerList.Count; i++)
+                            {
+                                if (headerList[i].Equals(headerMatch.Value))
+                                {
+                                    cellColumn = FIRST_COLUMN_ASCII + i;
+                                    tempCell = Convert.ToChar(cellColumn) + cellRow.ToString();
+                                    worksheet.Cells[tempCell].Style.WrapText = true;
+                                    worksheet.Cells[tempCell].Value = oneBlockLine.Substring(headerMatch.Length);
+                                    isTakeThisTextOfHeader = true;
+                                    break;
+                                }
+                            }
+                        }
+                        else if(isTakeThisTextOfHeader)
+                        {
+                            worksheet.Cells[tempCell].Value += " "+ oneBlockLine;
+                        }
+                    }
+                }
+
+                //worksheet.Column(1).Width = 1;
+                workbook.Save();
+            }
+        }
         public static string getBlockSingleText(List<string> block, string header, bool spaceBetween)
         {
+            if (null == header) { return ""; }
             string ret = "";
+            bool isTextOfHead = false;
             foreach (string aLine in block)
             {
-                if(null== header && !aLine.StartsWith("<"))
+                if(aLine.StartsWith("<"))
                 {
-                    ret += (spaceBetween && ret.Length> 0 ? " " : "") + aLine;
+                    if (aLine.StartsWith(header))
+                    {
+                        isTextOfHead = true;
+                        ret += aLine.Substring(header.Length);
+                    }
+                    else
+                    {
+                        isTextOfHead = false;
+                    }
                 }
-                if (null!= header && aLine.StartsWith(header))
+                else if (isTextOfHead)
                 {
-                    return aLine.Substring(header.Length);
+                    ret += (spaceBetween && ret.Length > 0 ? " " : "") + aLine;
                 }
+                
             }
 
             return ret;

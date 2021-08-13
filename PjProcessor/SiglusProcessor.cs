@@ -78,8 +78,10 @@ namespace Hoshi_Translator.PjProcessor
             }
         }
 
-        public void exportEng(string inputFile, string outputDir)
+        public void export(string inputFile, string outputDir, string lang)
         {
+            string jpCharExp = "[\uFF01-\uFF9F\u2000-\u206F\u2600-\u26FF\u3000-\u9fff\uFF00-\uFFEF]+";
+            string engExp = "[.,!?\"]$";
             Directory.CreateDirectory(outputDir);
             foreach (string filePath in BuCommon.listFiles(inputFile))
             {
@@ -92,7 +94,15 @@ namespace Hoshi_Translator.PjProcessor
                     {
                         string lineHead = sentenceMatch.Value;
                         string sentence = fileContent[i].Substring(lineHead.Length);
-                        if (!Regex.IsMatch(sentence, "[.,!?\"]$")) { continue; }
+                        if (lang.Equals("en"))
+                        {
+                            if (!Regex.IsMatch(sentence, engExp)) { continue; }
+                        }
+                        if (lang.Equals("jp"))
+                        {
+                            Match match = Regex.Match(sentence.Trim(), jpCharExp);
+                            if (match.Length == 0 || match.Length < sentence.Trim().Length) { continue; }
+                        }
                         List<string> tempBlock = new List<string>();
                         tempBlock.Add(TransCommon.TRANS_BLOCK_INFO_HEADER
                             + TransCommon.makeOneInfoStr(false, TransCommon.INFO_LINE_HEAD, (i + 1).ToString()));
