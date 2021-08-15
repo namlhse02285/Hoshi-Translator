@@ -12,6 +12,7 @@ namespace Hoshi_Translator
     class TransCommon
     {
         public static readonly string TRANS_BLOCK_INFO_HEADER = "<translate_info>";
+        public static readonly string EXPORT_FILE_EXTENSION = ".txt";
 
         public static readonly string INFO_LINE_HEAD = "line";
 

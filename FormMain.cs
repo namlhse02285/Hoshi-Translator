@@ -90,9 +90,9 @@ namespace Hoshi_Translator
                 case "common":
                     if (action.Equals("test"))
                     {
-                        int cellColumn = Convert.ToInt32('A');
-                        Debug.WriteLine(Convert.ToChar(cellColumn));
-                        //MessageBox.Show(Regex.IsMatch(t1, reg).ToString());
+                        Match matchFurigana2 = Regex.Match("[所属不明ヘリ'ゴースト]", @"\[(.+?)'.+?\]");
+
+                        MessageBox.Show(matchFurigana2.Groups[1].Value);
                         //MessageBox.Show(String.Format("[\"{0}\"]", "aaa"));
                         //Directory.Move(@"G:\s\u_all\u122\Watashi no H wa Watashi ni Makasete.", @"G:\s\u_all\u122\a1");
                     }
@@ -754,6 +754,29 @@ namespace Hoshi_Translator
                         string orgDir = args[3];
                         string outputDir = args[4];
                         kirikiriJsonProcessor.import(inputFile, orgDir, outputDir);
+                    }
+                    break;
+                case "kirikiri":
+                    KirikiriProcessor kirikiriProcessor = new KirikiriProcessor();
+                    kirikiriProcessor.loadDefault(true);
+                    if (action.Equals("export"))
+                    {
+                        string inputFile = args[2];
+                        string outputDir = args[3];
+                        kirikiriProcessor.export(inputFile, outputDir);
+                    }
+                    if (action.Equals("concat"))
+                    {
+                        string inputFile = args[2];
+                        string outputDir = args[3];
+                        int argsDelta = 1;
+                        List<string> patternList = new List<string>();
+                        while (3 + argsDelta < args.Length && args[3 + argsDelta].Length > 0)
+                        {
+                            patternList.Add(@args[3 + argsDelta]);
+                            argsDelta++;
+                        }
+                        kirikiriProcessor.concat(inputFile, outputDir, patternList.ToArray());
                     }
                     break;
                 case "vinahoshi":
