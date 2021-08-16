@@ -36,6 +36,7 @@ namespace Hoshi_Translator
             this.openConfigFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.executeCmd = new System.Windows.Forms.Button();
             this.tbxCommand = new System.Windows.Forms.TextBox();
+            this.openOutputFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -53,7 +54,8 @@ namespace Hoshi_Translator
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openGuideFileToolStripMenuItem,
-            this.openConfigFileToolStripMenuItem});
+            this.openConfigFileToolStripMenuItem,
+            this.openOutputFileToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
@@ -61,14 +63,14 @@ namespace Hoshi_Translator
             // openGuideFileToolStripMenuItem
             // 
             this.openGuideFileToolStripMenuItem.Name = "openGuideFileToolStripMenuItem";
-            this.openGuideFileToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.openGuideFileToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.openGuideFileToolStripMenuItem.Text = "Open guide file";
             this.openGuideFileToolStripMenuItem.Click += new System.EventHandler(this.openGuideFileToolStripMenuItem_Click);
             // 
             // openConfigFileToolStripMenuItem
             // 
             this.openConfigFileToolStripMenuItem.Name = "openConfigFileToolStripMenuItem";
-            this.openConfigFileToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.openConfigFileToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.openConfigFileToolStripMenuItem.Text = "Open Config File";
             this.openConfigFileToolStripMenuItem.Click += new System.EventHandler(this.openConfigFileToolStripMenuItem_Click);
             // 
@@ -101,6 +103,13 @@ namespace Hoshi_Translator
             this.tbxCommand.WordWrap = false;
             this.tbxCommand.KeyUp += new System.Windows.Forms.KeyEventHandler(this.tbxCommand_KeyUp);
             // 
+            // openOutputFileToolStripMenuItem
+            // 
+            this.openOutputFileToolStripMenuItem.Name = "openOutputFileToolStripMenuItem";
+            this.openOutputFileToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.openOutputFileToolStripMenuItem.Text = "Open output file";
+            this.openOutputFileToolStripMenuItem.Click += new System.EventHandler(this.openOutputFileToolStripMenuItem_Click);
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -129,6 +138,7 @@ namespace Hoshi_Translator
         private System.Windows.Forms.Button executeCmd;
         private System.Windows.Forms.TextBox tbxCommand;
         private System.Windows.Forms.ToolStripMenuItem openConfigFileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem openOutputFileToolStripMenuItem;
     }
 }
 

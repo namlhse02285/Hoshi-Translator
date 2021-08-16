@@ -781,13 +781,23 @@ namespace Hoshi_Translator
                     break;
                 case "vinahoshi":
                     VinaHoshiProcessor vinaHoshiProcessor = new VinaHoshiProcessor();
-                    if (action.Equals("add_media_info"))
+                    if (action.Equals("add_video_info"))
                     {
                         string ffmpegPath = args[2];
                         string inputFile = args[3];
-                        string separator = args[4];
-                        string outputDir = args[5];
-                        vinaHoshiProcessor.addMediaInfoToFileNam(ffmpegPath, inputFile, separator, outputDir);
+                        string outputDir = args[4];
+                        vinaHoshiProcessor.addVideoInfoToFileNam(ffmpegPath, inputFile, outputDir);
+                    }
+                    if (action.Equals("add_image_info"))
+                    {
+                        string inputFile = args[2];
+                        string outputDir = args[3];
+                        vinaHoshiProcessor.addImageInfoToFileNam(inputFile, outputDir);
+                    }
+                    if (action.Equals("generate_magic_path"))
+                    {
+                        string inputFile = args[2];
+                        vinaHoshiProcessor.generateMagicPath(inputFile);
                     }
                     break;
             }
@@ -839,6 +849,14 @@ namespace Hoshi_Translator
             if (File.Exists(AppConst.CONFIG_FILE))
             {
                 System.Diagnostics.Process.Start(AppConst.CONFIG_FILE);
+            }
+        }
+
+        private void openOutputFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (File.Exists(AppConst.OUTPUT_FILE))
+            {
+                System.Diagnostics.Process.Start(AppConst.OUTPUT_FILE);
             }
         }
     }
