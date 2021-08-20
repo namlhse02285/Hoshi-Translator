@@ -799,6 +799,12 @@ namespace Hoshi_Translator
                         string inputFile = args[2];
                         vinaHoshiProcessor.generateMagicPath(inputFile);
                     }
+                    if (action.Equals("parse_one_night_cross"))
+                    {
+                        string inputFile = args[2];
+                        string outputDir = args[3];
+                        vinaHoshiProcessor.parseOneNightCrossScript(inputFile, outputDir);
+                    }
                     break;
             }
         }
