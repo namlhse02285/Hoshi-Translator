@@ -92,7 +92,8 @@ namespace Hoshi_Translator
                     {
                         Match matchFurigana2 = Regex.Match("[所属不明ヘリ'ゴースト]", @"\[(.+?)'.+?\]");
 
-                        MessageBox.Show(matchFurigana2.Groups[1].Value);
+                        MessageBox.Show(Regex.Replace(@"H:\rpg_port_project\for_gvnvh18\Island SAGA v5\Island_SAGA_game_resource\.nomedia\www\audio\001\0001.rpgmvo"
+                            , @".*(?<=\\)([^\\]+)(\..+)$", "$1$&"));
                         //MessageBox.Show(String.Format("[\"{0}\"]", "aaa"));
                         //Directory.Move(@"G:\s\u_all\u122\Watashi no H wa Watashi ni Makasete.", @"G:\s\u_all\u122\a1");
                     }
@@ -105,7 +106,9 @@ namespace Hoshi_Translator
                         {
                             fontsNameList += font.Name + Environment.NewLine;
                         }
-                        MessageBox.Show(fontsNameList);
+                        File.WriteAllText(AppConst.OUTPUT_FILE, fontsNameList
+                            , BuCommon.getEncodingFromString("utf-8-bom"));
+                        openOutputFileToolStripMenuItem_Click(null, null);
                     }
                     if (action.Equals("replacer"))
                     {
@@ -339,6 +342,38 @@ namespace Hoshi_Translator
                             }
                             File.Move(inputOneFile, outputDir + "\\" + newName);
                         }
+                    }
+                    if (action.Equals("delete"))
+                    {
+                        string inputDir = args[2];
+                        string fileNameRegex = args[3];
+                        string filePathRegex = @".*";
+                        if (args.Length > 4) { filePathRegex = args[4]; }
+
+                        foreach (string filePath in BuCommon.listFiles(inputDir))
+                        {
+                            if (!Regex.IsMatch(filePath, filePathRegex)) { continue; }
+                            string fileFullName = Path.GetFileName(filePath);
+                            if (!Regex.IsMatch(fileFullName, fileNameRegex)) { continue; }
+                            File.Delete(filePath);
+                        }
+                    }
+                    if (action.Equals("list"))
+                    {
+                        string inputDir = args[2];
+                        string captureRegex = args[3];
+                        string resultRegex = args[4];
+                        string content = "";
+
+                        foreach (string filePath in BuCommon.listFiles(inputDir))
+                        {
+                            Match match = Regex.Match(filePath, captureRegex);
+                            if (!match.Success) { continue; }
+                            content += Regex.Replace(filePath, captureRegex, resultRegex)+ Environment.NewLine;
+                        }
+                        File.WriteAllText(AppConst.OUTPUT_FILE, content
+                            , BuCommon.getEncodingFromString("utf-8-bom"));
+                        openOutputFileToolStripMenuItem_Click(null, null);
                     }
                     break;
                 case "girls_guild":
@@ -798,6 +833,7 @@ namespace Hoshi_Translator
                     {
                         string inputFile = args[2];
                         vinaHoshiProcessor.generateMagicPath(inputFile);
+                        openOutputFileToolStripMenuItem_Click(null, null);
                     }
                     if (action.Equals("parse_one_night_cross"))
                     {

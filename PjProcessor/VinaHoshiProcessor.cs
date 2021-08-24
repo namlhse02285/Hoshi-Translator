@@ -165,7 +165,7 @@ namespace Hoshi_Translator.PjProcessor
                         {
 							parseContent += Environment.NewLine;
 							parseContent += "img; name=" + tempCharName
-								+ "; action=animate; type=color; color=80000000; time=500";
+								+ "; action=animate; type=filter; color=80000000; time=500";
 						}
 						tempCharName = newName;
 						continue;
@@ -196,7 +196,7 @@ namespace Hoshi_Translator.PjProcessor
 							string time = getProperty(line, "time");
 							parseContent += Environment.NewLine;
 							parseContent += "img; name=bover; action=animate; type=fade; alpha=0; time=" + time;
-							parseContent += "|img; name=bover; action=remove";
+							parseContent += " -> img; name=bover; action=remove";
 							parseContent += Environment.NewLine;
 						}
 						else if (command.StartsWith("mask "))
@@ -204,7 +204,7 @@ namespace Hoshi_Translator.PjProcessor
 							parseContent += Environment.NewLine;
 							string time = getProperty(line, "time");
 							parseContent += "img; action=new; name=bover; type=back; layer=over; path=black";
-							parseContent += "|img; name=bover; action=animate; type=fade; alpha=1; time=" + time;
+							parseContent += " -> img; name=bover; action=animate; type=fade; alpha=1; time=" + time;
 							parseContent += Environment.NewLine;
 						}
 						else if (command.StartsWith("chara_show"))
@@ -220,7 +220,7 @@ namespace Hoshi_Translator.PjProcessor
 							left = (int)Math.Round((left + width / 2) * 100.0 / 1280);
 							parseContent += String.Format("img; action=new; name={0}; type=char; path={1}; body={2}; left={3}; bottom=-10; color=80000000"
 								, name, path, body, left);
-							parseContent += String.Format("|img; name={0}; action=animate; type=fade; alpha=1; time={1}"
+							parseContent += String.Format(" -> img; name={0}; action=animate; type=fade; alpha=1; time={1}"
 								, name, time);
 							parseContent += Environment.NewLine;
 							charOnScene.Add(name);
@@ -262,7 +262,7 @@ namespace Hoshi_Translator.PjProcessor
 							string time = getProperty(line, "time");
 							parseContent += String.Format("img; action=animate; type=fade; name={0}; alpha=0; time={1}"
 								, name, time);
-							parseContent += String.Format("|img; name={0}; action=remove"
+							parseContent += String.Format(" -> img; name={0}; action=remove"
 								, name);
 							parseContent += Environment.NewLine;
 							charOnScene.Remove(name);
@@ -311,11 +311,11 @@ namespace Hoshi_Translator.PjProcessor
 							string time = getProperty(line, "time");
 							parseContent += String.Format("img; action=new; type=back; name=bgover; path={0}"
 								, path);
-							parseContent += String.Format("|img; action=animate; type=fade; name=bgover; alpha=1; time={0}"
+							parseContent += String.Format(" -> img; action=animate; type=fade; name=bgover; alpha=1; time={0}"
 								, time);
-							parseContent += String.Format("|img; action=mod; name=bg; path={0}"
+							parseContent += String.Format(" -> img; action=mod; name=bg; path={0}"
 								, path);
-							parseContent += "|img; name=bgover; action=remove";
+							parseContent += " -> img; name=bgover; action=remove";
 							parseContent += Environment.NewLine;
 						}
 					}
@@ -326,7 +326,7 @@ namespace Hoshi_Translator.PjProcessor
 						{
 							parseContent += Environment.NewLine;
 							parseContent += "img; name=" + tempCharName
-								+ "; action=animate; type=color; color=00000000; time=500";
+								+ "; action=animate; type=filter; color=00000000; time=500";
 						}
 						//Character say
 						parseContent += Environment.NewLine;
