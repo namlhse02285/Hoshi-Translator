@@ -48,7 +48,7 @@ namespace Hoshi_Translator
             return ret.ToString();
         }
         public static void convertExportedFileToExcel(string inputFile,
-            Encoding encoding, string headerListStr, string outputDir)
+            Encoding encoding, string headerListStr, int[] listColumnWidth, string outputDir)
         {
             Directory.CreateDirectory(outputDir);
             List<string> headerList = Regex.Split(headerListStr, ",").ToList();
@@ -104,7 +104,10 @@ namespace Hoshi_Translator
                     }
                 }
 
-                //worksheet.Column(1).Width = 1;
+                for (int i = 0; i < listColumnWidth.Length; i++)
+                {
+                    worksheet.Column(1+ i).Width = listColumnWidth[i];
+                }
                 workbook.Save();
             }
         }
@@ -387,6 +390,15 @@ namespace Hoshi_Translator
             if (baseText.EndsWith("”") && !sentence.EndsWith("”")) { ret+= "”"; }
             if (baseText.EndsWith("\"") && !sentence.EndsWith("\"")) { ret+= "\""; }
             return ret;
+        }
+        public static string htmlStyleGetProperty(string command, string propName)
+        {//getPropertyFromCommand
+            return Regex.Match(command, "(?<=" + propName + "=\").+?(?=\")").Value;
+        }
+        public static int htmlStyleGetIntProperty(string command, string propName)
+        {
+            string value = Regex.Match(command, "(?<=" + propName + "=\")\\d+?(?=\")").Value;
+            return Int32.Parse(value);
         }
 
 

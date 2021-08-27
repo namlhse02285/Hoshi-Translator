@@ -42,7 +42,7 @@ namespace Hoshi_Translator.PjProcessor
                     Dictionary<string, string> headerInfo = new Dictionary<string, string>();
                     headerInfo.Add(TransCommon.INFO_LINE_HEAD, (i + 1).ToString());
 
-                    if (Regex.IsMatch(lineToProcess, @"^\[.+?\]$"))
+                    if (Regex.IsMatch(lineToProcess, @"^\[[^\[\]]+?\]$"))
                     {
                         if ("[ノベルモード]".Equals(lineToProcess))
                         {
@@ -135,6 +135,41 @@ namespace Hoshi_Translator.PjProcessor
                             }
                         }
                         if (concated> 0) { i = concated; }
+                    }
+                }
+
+                //if (changed)
+                //{
+                String outputFile = outputDir + "\\" + Path.GetFileName(fromFilePath);
+                File.WriteAllLines(outputFile, inputFileArr, aMediateEncoding);
+                //}
+            }
+        }
+
+        public void concat2(string inputDir, string outputDir)
+        {
+            Directory.CreateDirectory(outputDir);
+            foreach (string fromFilePath in BuCommon.listFiles(inputDir))
+            {
+                string[] inputFileArr = File.ReadAllLines(fromFilePath, aMediateEncoding);
+                for (int i = 0; i < inputFileArr.Length; i++)
+                {
+                    if (inputFileArr[i].StartsWith(TransCommon.TRANS_BLOCK_INFO_HEADER))
+                    {
+                        Dictionary<string, string> headerInfo = TransCommon.getInfoFromString(inputFileArr[i]);
+                        int fileLine = Int32.Parse(headerInfo[TransCommon.INFO_LINE_HEAD]);
+                        string orgTxt = inputFileArr[i + 1].Substring(TransCommon.ORIGINAL_LINE_HEAD.Length);
+                        string charName = "";
+                        Match charNameMatch = Regex.Match(orgTxt, @"\[nm [^\[\]]+?\]");
+                        if (charNameMatch.Success)
+                        {
+                            charName = TransCommon.htmlStyleGetProperty(charNameMatch.Value, "t");
+                        }
+
+                        orgTxt = removeCodeFromText(orgTxt);
+                        inputFileArr[i + 2] = (charName.Length== 0 ? ""
+                            : (TransCommon.CHAR_NAME_LINE_HEAD+ charName+ Environment.NewLine))
+                            + TransCommon.FULL_TEXT_BOX_LINE_HEAD + orgTxt;
                     }
                 }
 

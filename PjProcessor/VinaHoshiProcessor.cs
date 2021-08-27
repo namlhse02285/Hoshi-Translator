@@ -134,15 +134,6 @@ namespace Hoshi_Translator.PjProcessor
 			ret = ret.Substring(0, ret.LastIndexOf("."));
 			return ret.ToLower();
 		}
-		private static string getProperty(string command, string propName)
-		{//getPropertyFromCommand
-			return Regex.Match(command, "(?<=" + propName + "=\").+?(?=\")").Value;
-		}
-		private static int getIntProperty(string command, string propName)
-		{
-			string value = Regex.Match(command, "(?<=" + propName + "=\")\\d+?(?=\")").Value;
-			return Int32.Parse(value);
-		}
 		public void parseOneNightCrossScript(string inputDir, string outputDir)
         {
 			Directory.CreateDirectory(outputDir);
@@ -193,7 +184,7 @@ namespace Hoshi_Translator.PjProcessor
 						}
 						else if (command.StartsWith("mask_off"))
 						{
-							string time = getProperty(line, "time");
+							string time = TransCommon.htmlStyleGetProperty(line, "time");
 							parseContent += Environment.NewLine;
 							parseContent += "img; name=bover; action=animate; type=fade; alpha=0; time=" + time;
 							parseContent += " -> img; name=bover; action=remove";
@@ -202,7 +193,7 @@ namespace Hoshi_Translator.PjProcessor
 						else if (command.StartsWith("mask "))
 						{
 							parseContent += Environment.NewLine;
-							string time = getProperty(line, "time");
+							string time = TransCommon.htmlStyleGetProperty(line, "time");
 							parseContent += "img; action=new; name=bover; type=back; layer=over; path=black";
 							parseContent += " -> img; name=bover; action=animate; type=fade; alpha=1; time=" + time;
 							parseContent += Environment.NewLine;
@@ -210,13 +201,13 @@ namespace Hoshi_Translator.PjProcessor
 						else if (command.StartsWith("chara_show"))
 						{
 							parseContent += Environment.NewLine;
-							string time = getProperty(line, "time");
-							string name = getProperty(line, "name");
-							string body = getProperty(line, "storage");
+							string time = TransCommon.htmlStyleGetProperty(line, "time");
+							string name = TransCommon.htmlStyleGetProperty(line, "name");
+							string body = TransCommon.htmlStyleGetProperty(line, "storage");
 							body = storageToBody(body);
 							string path = body.Substring(0, body.IndexOf("_"));
-							int width = getIntProperty(line, "width");
-							int left = getIntProperty(line, "left");
+							int width = TransCommon.htmlStyleGetIntProperty(line, "width");
+							int left = TransCommon.htmlStyleGetIntProperty(line, "left");
 							left = (int)Math.Round((left + width / 2) * 100.0 / 1280);
 							parseContent += String.Format("img; action=new; name={0}; type=char; path={1}; body={2}; left={3}; bottom=-10; color=80000000"
 								, name, path, body, left);
@@ -228,8 +219,8 @@ namespace Hoshi_Translator.PjProcessor
 						else if (command.StartsWith("chara_mod"))
 						{
 							parseContent += Environment.NewLine;
-							string name = getProperty(line, "name");
-							string body = getProperty(line, "storage");
+							string name = TransCommon.htmlStyleGetProperty(line, "name");
+							string body = TransCommon.htmlStyleGetProperty(line, "storage");
 							body = storageToBody(body);
 							parseContent += String.Format("img; action=mod; name={0}; body={1}"
 								, name, body);
@@ -238,11 +229,11 @@ namespace Hoshi_Translator.PjProcessor
 						else if (command.StartsWith("chara_move"))
 						{
 							parseContent += Environment.NewLine;
-							string name = getProperty(line, "name");
-							string time = getProperty(line, "time");
-							int width = getIntProperty(line, "width");
-							int left = getIntProperty(line, "left");
-							string curve = getProperty(line, "effect");
+							string name = TransCommon.htmlStyleGetProperty(line, "name");
+							string time = TransCommon.htmlStyleGetProperty(line, "time");
+							int width = TransCommon.htmlStyleGetIntProperty(line, "width");
+							int left = TransCommon.htmlStyleGetIntProperty(line, "left");
+							string curve = TransCommon.htmlStyleGetProperty(line, "effect");
 							left = (int)Math.Round((left + width / 2) * 100.0 / 1280);
 							parseContent += String.Format("img; action=animate; name={0}; type=move; left={1}; time={2}; curve={3}"
 								, name, left, time, curve);
@@ -258,8 +249,8 @@ namespace Hoshi_Translator.PjProcessor
 						else if (command.StartsWith("chara_hide"))
 						{
 							parseContent += Environment.NewLine;
-							string name = getProperty(line, "name");
-							string time = getProperty(line, "time");
+							string name = TransCommon.htmlStyleGetProperty(line, "name");
+							string time = TransCommon.htmlStyleGetProperty(line, "time");
 							parseContent += String.Format("img; action=animate; type=fade; name={0}; alpha=0; time={1}"
 								, name, time);
 							parseContent += String.Format(" -> img; name={0}; action=remove"
@@ -270,7 +261,7 @@ namespace Hoshi_Translator.PjProcessor
 						else if (command.StartsWith("jump "))
 						{
 							parseContent += Environment.NewLine;
-							string file = getProperty(line, "storage");
+							string file = TransCommon.htmlStyleGetProperty(line, "storage");
 							if(file.Length> 0)
                             {
 								file = file.Substring(0, file.LastIndexOf("."));
@@ -281,15 +272,15 @@ namespace Hoshi_Translator.PjProcessor
 						else if (command.StartsWith("stopbgm "))
 						{
 							parseContent += Environment.NewLine;
-							string time = getProperty(line, "time");
+							string time = TransCommon.htmlStyleGetProperty(line, "time");
 							parseContent += String.Format("sound; type=back; name=bgm; path=");
 							parseContent += Environment.NewLine;
 						}
 						else if (command.StartsWith("playbgm "))
 						{
 							parseContent += Environment.NewLine;
-							string time = getProperty(line, "time");
-							string path = getProperty(line, "storage");
+							string time = TransCommon.htmlStyleGetProperty(line, "time");
+							string path = TransCommon.htmlStyleGetProperty(line, "storage");
 							path = path.Substring(0, path.LastIndexOf("."));
 							parseContent += String.Format("sound; name=bgm; type=back; path=" + path);
 							parseContent += Environment.NewLine;
@@ -297,8 +288,8 @@ namespace Hoshi_Translator.PjProcessor
 						else if (command.StartsWith("playse "))
 						{
 							parseContent += Environment.NewLine;
-							string time = getProperty(line, "time");
-							string path = getProperty(line, "storage");
+							string time = TransCommon.htmlStyleGetProperty(line, "time");
+							string path = TransCommon.htmlStyleGetProperty(line, "storage");
 							path = path.Substring(0, path.LastIndexOf("."));
 							parseContent += String.Format("sound; type=se; path=" + path);
 							parseContent += Environment.NewLine;
@@ -306,9 +297,9 @@ namespace Hoshi_Translator.PjProcessor
 						else if (command.StartsWith("bg "))
 						{
 							parseContent += Environment.NewLine;
-							string path = getProperty(line, "storage");
+							string path = TransCommon.htmlStyleGetProperty(line, "storage");
 							path = path.Substring(0, path.LastIndexOf("."));
-							string time = getProperty(line, "time");
+							string time = TransCommon.htmlStyleGetProperty(line, "time");
 							parseContent += String.Format("img; action=new; type=back; name=bgover; path={0}"
 								, path);
 							parseContent += String.Format(" -> img; action=animate; type=fade; name=bgover; alpha=1; time={0}"

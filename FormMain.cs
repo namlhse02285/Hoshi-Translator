@@ -307,8 +307,12 @@ namespace Hoshi_Translator
                         string inputDir = args[2];
                         Encoding encoding = BuCommon.getEncodingFromString(args[3]);
                         string headerListStr = args[4];
-                        string outputDir = args[5];
-                        TransCommon.convertExportedFileToExcel(inputDir, encoding, headerListStr, outputDir);
+                        string columnWidthStr = args[5];
+                        string outputDir = args[6];
+                        TransCommon.convertExportedFileToExcel(inputDir, encoding, headerListStr
+                            , Regex.Split(columnWidthStr, ",")
+                                .Select(w => w.Trim().Length== 0 ? 70 : int.Parse(w.Trim())).ToArray()
+                            , outputDir);
                     }
                     break;
                 case "file":
@@ -812,6 +816,12 @@ namespace Hoshi_Translator
                             argsDelta++;
                         }
                         kirikiriProcessor.concat(inputFile, outputDir, patternList.ToArray());
+                    }
+                    if (action.Equals("concat2"))
+                    {
+                        string inputFile = args[2];
+                        string outputDir = args[3];
+                        kirikiriProcessor.concat2(inputFile, outputDir);
                     }
                     break;
                 case "vinahoshi":
