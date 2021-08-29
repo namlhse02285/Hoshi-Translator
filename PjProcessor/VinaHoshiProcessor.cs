@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -12,6 +13,7 @@ namespace Hoshi_Translator.PjProcessor
     class VinaHoshiProcessor
     {
 		public static readonly string INFO_SEPARATOR = ";";
+		public static readonly string BETWEEN_SCRIPT_COMMAND_SEPARATOR = " -> ";
 		public static readonly Encoding COMMON_ENCODING = BuCommon.getEncodingFromString("utf-8");
 		public void addVideoInfoToFileNam(string ffmpegPath, string rootDir, string outputDir)
         {
@@ -342,6 +344,115 @@ namespace Hoshi_Translator.PjProcessor
 					File.WriteAllText(outputPath, parseContent, COMMON_ENCODING);
 				}
 			}
+		}
+
+		private string getKanaFromHtml(string htmlRespond)
+        {
+			MatchCollection matchCollection = Regex.Matches(
+				htmlRespond, @">[^<> 【】]+? 【[^【】<>]+?】");
+			int lastIndex = 0;
+			string ret = "";
+			List<string> kanjiList = new List<string>();
+			List<string> hiraOfKanjiList = new List<string>();
+			List<bool> isStartKanjiBlockTextList = new List<bool>();
+			foreach (Match match in matchCollection)
+			{
+				isStartKanjiBlockTextList.Add(htmlRespond
+					.Substring(lastIndex, match.Index - lastIndex)
+					.Contains("class=\"gloss-rtext\""));
+				kanjiList.Add(match.Value.Substring(1, match.Value.IndexOf("【")- 1).Trim());
+				hiraOfKanjiList.Add(Regex.Match(match.Value, @"(?<=【).+?(?=】)").Value.Trim());
+				lastIndex = match.Index + match.Length;
+			}
+			for (int i = 0; i < kanjiList.Count; i++)
+			{
+				if(i+ 1 < kanjiList.Count && kanjiList[i+ 1].Substring(0, 1)
+					.Equals(kanjiList[i].Substring(0, 1)))
+				{
+					ret += kanjiList[i] + ": " + hiraOfKanjiList[i]+ " | ";
+				}
+                else
+                {
+					ret += "<click=copy>" + kanjiList[i] + "</click>: " + hiraOfKanjiList[i] + "<br>";
+				}
+			}
+
+			return ret;
+		}
+		public void addKana(string inputDir, string outputDir)
+        {
+			Directory.CreateDirectory(outputDir);
+			foreach (string filePath in BuCommon.listFiles(inputDir))
+            {
+				string[] fileContent = File.ReadAllLines(filePath, COMMON_ENCODING);
+				string parseContent = "";
+
+				for (int i = 0; i < fileContent.Length; i++)
+                {
+					string line = fileContent[i].Trim();
+					line = Regex.Replace(line, @"\/\/.+", "");
+					if (line.Length == 0) { continue; }
+
+					string[] commandInLine = Regex.Split(line, BETWEEN_SCRIPT_COMMAND_SEPARATOR);
+					for (int j = 0; j < commandInLine.Length; j++)
+					{
+						if (commandInLine[j].StartsWith("txt"))
+						{
+							Match jpTextMatch = Regex.Match(commandInLine[j], @"(?<=jp=)[^;]+?(?=;)");
+							string jpText = jpTextMatch.Value;
+							jpText = Regex.Replace(jpText, "<[^<>]+?>", "");
+
+							WebRequest request = WebRequest.Create("https://ichi.moe/cl/qr/?q=" + jpText + "&r=htr");
+							request.Credentials = CredentialCache.DefaultCredentials;
+							WebResponse response = request.GetResponse();
+							string responseFromServer = "";
+
+							using (Stream dataStream = response.GetResponseStream())
+							{
+								StreamReader reader = new StreamReader(dataStream);
+								responseFromServer = reader.ReadToEnd();
+
+							}
+							response.Close();
+
+                            if (commandInLine[j].Contains(";vi="))
+                            {
+								commandInLine[j] =
+									commandInLine[j].Substring(0, commandInLine[j].IndexOf(";vi="))+
+									";kana="+ getKanaFromHtml(responseFromServer)+
+									commandInLine[j].Substring(commandInLine[j].IndexOf(";vi="));
+                            }
+                            else
+                            {
+								commandInLine[j] += ";kana=" + getKanaFromHtml(responseFromServer);
+							}
+						}
+					}
+					fileContent[i] = String.Join(BETWEEN_SCRIPT_COMMAND_SEPARATOR, commandInLine);
+				}
+
+				string outputPath = String.Format("{0}\\{1}", outputDir, Path.GetFileName(filePath));
+				File.WriteAllLines(outputPath, fileContent, COMMON_ENCODING);
+			}
+
+		}
+		private string genKanaBlock(Dictionary<string, string> headerInfo, string splittedJpText)
+        {
+			if (splittedJpText.Length == 0) { return ""; }
+			string ret = "";
+			List<string> tempBlock = new List<string>();
+
+			tempBlock.Add(TransCommon.genInfoString(headerInfo));
+			tempBlock.Add(TransCommon.ORIGINAL_LINE_HEAD + splittedJpText);
+			tempBlock.Add(TransCommon.TRANSLATED_LINE_HEAD);
+			tempBlock.Add("");
+
+			foreach (string blockLine in tempBlock)
+			{
+				ret += blockLine + Environment.NewLine;
+			}
+
+			return ret;
 		}
 
 

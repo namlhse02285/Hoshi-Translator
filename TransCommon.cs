@@ -61,7 +61,7 @@ namespace Hoshi_Translator
                 ExcelPackage workbook = new ExcelPackage(newExcelFileInfo);
                 workbook.Workbook.Properties.Title = Path.GetFileName(filePath);
                 ExcelWorksheet worksheet = workbook.Workbook.Worksheets.Add(Path.GetFileNameWithoutExtension(filePath));
-                worksheet.DefaultColWidth = 70;
+                //worksheet.DefaultColWidth = 70;
                 int FIRST_COLUMN_ASCII= Convert.ToInt32('A');
 
                 int cellColumn = FIRST_COLUMN_ASCII;

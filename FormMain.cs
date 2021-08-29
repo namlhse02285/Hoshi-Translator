@@ -5,10 +5,12 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using HtmlAgilityPack;
 
 namespace Hoshi_Translator
 {
@@ -90,12 +92,37 @@ namespace Hoshi_Translator
                 case "common":
                     if (action.Equals("test"))
                     {
-                        Match matchFurigana2 = Regex.Match("[所属不明ヘリ'ゴースト]", @"\[(.+?)'.+?\]");
+                        string sentence = "自らの正しさを信じているからだ";
+                        WebRequest request = WebRequest.Create("https://ichi.moe/cl/qr/?q=" + sentence + "&r=htr");
+                        request.Credentials = CredentialCache.DefaultCredentials;
+                        WebResponse response = request.GetResponse();
+                        string responseFromServer = "";
 
-                        MessageBox.Show(Regex.Replace(@"H:\rpg_port_project\for_gvnvh18\Island SAGA v5\Island_SAGA_game_resource\.nomedia\www\audio\001\0001.rpgmvo"
-                            , @".*(?<=\\)([^\\]+)(\..+)$", "$1$&"));
-                        //MessageBox.Show(String.Format("[\"{0}\"]", "aaa"));
-                        //Directory.Move(@"G:\s\u_all\u122\Watashi no H wa Watashi ni Makasete.", @"G:\s\u_all\u122\a1");
+                        using (Stream dataStream = response.GetResponseStream())
+                        {
+                            StreamReader reader = new StreamReader(dataStream);
+                            responseFromServer = reader.ReadToEnd();
+                            
+                        }
+                        response.Close();
+
+                        MatchCollection matchCollection = Regex.Matches(responseFromServer
+                            , @">[^<> 【】]+? 【[^【】<>]+?】");
+                        int lastIndex = 0;
+                        foreach (Match match in matchCollection)
+                        {
+                            Console.WriteLine(match.Value);
+                            Console.WriteLine(responseFromServer
+                                .Substring(lastIndex, match.Index- lastIndex)
+                                .Contains("class=\"gloss-rtext\""));
+                            lastIndex = match.Index + match.Length;
+                        }
+                        var htmlDoc = new HtmlAgilityPack.HtmlDocument();
+                        htmlDoc.LoadHtml(responseFromServer);
+
+                        var htmlNodes = htmlDoc.DocumentNode;
+                        htmlNodes.SelectNodes("div[@class=\"gloss-all\"]");
+                        Console.WriteLine("");
                     }
                     if (action.Equals("font_list"))
                     {
@@ -850,6 +877,12 @@ namespace Hoshi_Translator
                         string inputFile = args[2];
                         string outputDir = args[3];
                         vinaHoshiProcessor.parseOneNightCrossScript(inputFile, outputDir);
+                    }
+                    if (action.Equals("add_kana_to_script"))
+                    {
+                        string inputFile = args[2];
+                        string outputDir = args[3];
+                        vinaHoshiProcessor.addKana(inputFile, outputDir);
                     }
                     break;
             }
