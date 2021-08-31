@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HtmlAgilityPack;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -346,34 +347,52 @@ namespace Hoshi_Translator.PjProcessor
 			}
 		}
 
-		private string getKanaFromHtml(string htmlRespond)
+		private string buildKanaFromHtml(string htmlRespond)
         {
-			MatchCollection matchCollection = Regex.Matches(
-				htmlRespond, @">[^<> 【】]+? 【[^【】<>]+?】");
-			int lastIndex = 0;
+			//MatchCollection matchCollection = Regex.Matches(
+			//	htmlRespond, @">[^<> 【】]+? 【[^【】<>]+?】");
+			//int lastIndex = 0;
+			//string ret = "";
+			//List<string> kanjiList = new List<string>();
+			//List<string> hiraOfKanjiList = new List<string>();
+			//List<bool> isStartKanjiBlockTextList = new List<bool>();
+			//foreach (Match match in matchCollection)
+			//{
+			//	isStartKanjiBlockTextList.Add(htmlRespond
+			//		.Substring(lastIndex, match.Index - lastIndex)
+			//		.Contains("class=\"gloss-rtext\""));
+			//	kanjiList.Add(match.Value.Substring(1, match.Value.IndexOf("【")- 1).Trim());
+			//	hiraOfKanjiList.Add(Regex.Match(match.Value, @"(?<=【).+?(?=】)").Value.Trim());
+			//	lastIndex = match.Index + match.Length;
+			//}
+
+			HtmlDocument htmlDoc = new HtmlDocument();
+			htmlDoc.LoadHtml(htmlRespond);
 			string ret = "";
-			List<string> kanjiList = new List<string>();
-			List<string> hiraOfKanjiList = new List<string>();
-			List<bool> isStartKanjiBlockTextList = new List<bool>();
-			foreach (Match match in matchCollection)
+
+			HtmlNodeCollection allKanjiBlock = htmlDoc.DocumentNode.SelectNodes("//div[@class=\"gloss\"]");
+			if (null == allKanjiBlock) { return ret; }
+			foreach (HtmlNode capturedNote in allKanjiBlock)
 			{
-				isStartKanjiBlockTextList.Add(htmlRespond
-					.Substring(lastIndex, match.Index - lastIndex)
-					.Contains("class=\"gloss-rtext\""));
-				kanjiList.Add(match.Value.Substring(1, match.Value.IndexOf("【")- 1).Trim());
-				hiraOfKanjiList.Add(Regex.Match(match.Value, @"(?<=【).+?(?=】)").Value.Trim());
-				lastIndex = match.Index + match.Length;
-			}
-			for (int i = 0; i < kanjiList.Count; i++)
-			{
-				if(i+ 1 < kanjiList.Count && kanjiList[i+ 1].Substring(0, 1)
-					.Equals(kanjiList[i].Substring(0, 1)))
+				HtmlNode filNote = capturedNote.SelectSingleNode("./div/dl[@class=\"alternatives\"]/dt");//
+				if (null != filNote && filNote.InnerText.Contains("【"))
 				{
-					ret += kanjiList[i] + ": " + hiraOfKanjiList[i]+ " | ";
-				}
-                else
-                {
-					ret += "<click=copy>" + kanjiList[i] + "</click>: " + hiraOfKanjiList[i] + "<br>";
+					MatchCollection matchCollection = Regex.Matches(
+						capturedNote.InnerHtml, ">(" + filNote.InnerText.Substring(0, 1)
+							+ "[^<> 【】]+?) 【([^【】<>]+?)】");
+					for (int i = 0; i < matchCollection.Count; i++)
+					{
+						if (i < matchCollection.Count - 1)
+						{
+							ret += matchCollection[i].Groups[1].Value + ": "
+								+ matchCollection[i].Groups[2].Value + " | ";
+						}
+						else
+						{
+							ret += "<click=copy>" + matchCollection[i].Groups[1].Value
+								+ "</click>: " + matchCollection[i].Groups[2].Value + "<br>";
+						}
+					}
 				}
 			}
 
@@ -419,12 +438,12 @@ namespace Hoshi_Translator.PjProcessor
                             {
 								commandInLine[j] =
 									commandInLine[j].Substring(0, commandInLine[j].IndexOf(";vi="))+
-									";kana="+ getKanaFromHtml(responseFromServer)+
+									";kana="+ buildKanaFromHtml(responseFromServer)+
 									commandInLine[j].Substring(commandInLine[j].IndexOf(";vi="));
                             }
                             else
                             {
-								commandInLine[j] += ";kana=" + getKanaFromHtml(responseFromServer);
+								commandInLine[j] += ";kana=" + buildKanaFromHtml(responseFromServer);
 							}
 						}
 					}

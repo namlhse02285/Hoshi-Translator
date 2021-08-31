@@ -10,7 +10,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using HtmlAgilityPack;
 
 namespace Hoshi_Translator
 {
@@ -92,37 +91,10 @@ namespace Hoshi_Translator
                 case "common":
                     if (action.Equals("test"))
                     {
-                        string sentence = "自らの正しさを信じているからだ";
-                        WebRequest request = WebRequest.Create("https://ichi.moe/cl/qr/?q=" + sentence + "&r=htr");
-                        request.Credentials = CredentialCache.DefaultCredentials;
-                        WebResponse response = request.GetResponse();
-                        string responseFromServer = "";
-
-                        using (Stream dataStream = response.GetResponseStream())
-                        {
-                            StreamReader reader = new StreamReader(dataStream);
-                            responseFromServer = reader.ReadToEnd();
-                            
-                        }
-                        response.Close();
-
-                        MatchCollection matchCollection = Regex.Matches(responseFromServer
-                            , @">[^<> 【】]+? 【[^【】<>]+?】");
-                        int lastIndex = 0;
-                        foreach (Match match in matchCollection)
-                        {
-                            Console.WriteLine(match.Value);
-                            Console.WriteLine(responseFromServer
-                                .Substring(lastIndex, match.Index- lastIndex)
-                                .Contains("class=\"gloss-rtext\""));
-                            lastIndex = match.Index + match.Length;
-                        }
-                        var htmlDoc = new HtmlAgilityPack.HtmlDocument();
-                        htmlDoc.LoadHtml(responseFromServer);
-
-                        var htmlNodes = htmlDoc.DocumentNode;
-                        htmlNodes.SelectNodes("div[@class=\"gloss-all\"]");
-                        Console.WriteLine("");
+                        //string sentence = "人を食らう化け物に全てを奪われたあのとき、あたしはヴァンパイアハンターになることを決意した。闘うことが唯一の正義だと信じて。";
+                        //WebRequest request = WebRequest.Create("https://ichi.moe/cl/qr/?q=" + sentence + "&r=htr");
+                        //request.Credentials = CredentialCache.DefaultCredentials;
+                        Debug.WriteLine("");
                     }
                     if (action.Equals("font_list"))
                     {
