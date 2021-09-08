@@ -94,7 +94,11 @@ namespace Hoshi_Translator
                         //string sentence = "人を食らう化け物に全てを奪われたあのとき、あたしはヴァンパイアハンターになることを決意した。闘うことが唯一の正義だと信じて。";
                         //WebRequest request = WebRequest.Create("https://ichi.moe/cl/qr/?q=" + sentence + "&r=htr");
                         //request.Credentials = CredentialCache.DefaultCredentials;
-                        Debug.WriteLine("");
+                        bool testBool = false;
+                        bool testBool2 = false;
+                        testBool2 = (testBool = !testBool);
+                        Debug.WriteLine(""+ testBool);
+                        Debug.WriteLine(""+ testBool2);
                     }
                     if (action.Equals("font_list"))
                     {
@@ -319,19 +323,30 @@ namespace Hoshi_Translator
                     {
                         string inputDir = args[2];
                         string outputDir = args[3];
+                        Directory.CreateDirectory(outputDir);
+                        bool deleteSource= args[4].ToLower().Equals("true");
                         string separator = "(=)";
 
                         foreach (string inputOneFile in BuCommon.listFiles(inputDir))
                         {
                             string newName = inputOneFile.Substring(inputDir.Length + 1);
                             newName = newName.Replace("\\", separator);
-                            File.Move(inputOneFile, outputDir + "\\" + newName);
+                            if (deleteSource)
+                            {
+                                File.Move(inputOneFile, outputDir + "\\" + newName);
+                            }
+                            else
+                            {
+                                File.Copy(inputOneFile, outputDir + "\\" + newName);
+                            }
                         }
                     }
                     if (action.Equals("put_in"))
                     {
                         string inputDir = args[2];
                         string outputDir = args[3];
+                        Directory.CreateDirectory(outputDir);
+                        bool deleteSource = args[4].ToLower().Equals("true");
                         string separator = "(=)";
 
                         foreach (string inputOneFile in BuCommon.listFiles(inputDir))
@@ -343,21 +358,36 @@ namespace Hoshi_Translator
                             {
                                 Directory.CreateDirectory(newDir);
                             }
-                            File.Move(inputOneFile, outputDir + "\\" + newName);
+                            if (deleteSource)
+                            {
+                                File.Move(inputOneFile, outputDir + "\\" + newName);
+                            }
+                            else
+                            {
+                                File.Copy(inputOneFile, outputDir + "\\" + newName);
+                            }
                         }
                     }
                     if (action.Equals("delete"))
                     {
                         string inputDir = args[2];
-                        string fileNameRegex = args[3];
-                        string filePathRegex = @".*";
-                        if (args.Length > 4) { filePathRegex = args[4]; }
+                        bool isAccept= args[3].ToLower().Equals("accept");
+                        string fileNameRegex = args[4];
+                        string filePathRegex= args[5];
 
                         foreach (string filePath in BuCommon.listFiles(inputDir))
                         {
-                            if (!Regex.IsMatch(filePath, filePathRegex)) { continue; }
+                            if(filePathRegex.Length> 1)
+                            {
+                                if (isAccept && !Regex.IsMatch(filePath, filePathRegex)) { continue; }
+                                if (!isAccept && Regex.IsMatch(filePath, filePathRegex)) { continue; }
+                            }
                             string fileFullName = Path.GetFileName(filePath);
-                            if (!Regex.IsMatch(fileFullName, fileNameRegex)) { continue; }
+                            if(fileNameRegex.Length> 1)
+                            {
+                                if (isAccept && !Regex.IsMatch(fileFullName, fileNameRegex)) { continue; }
+                                if (!isAccept && Regex.IsMatch(fileFullName, fileNameRegex)) { continue; }
+                            }
                             File.Delete(filePath);
                         }
                     }
@@ -377,6 +407,17 @@ namespace Hoshi_Translator
                         File.WriteAllText(AppConst.OUTPUT_FILE, content
                             , BuCommon.getEncodingFromString("utf-8-bom"));
                         openOutputFileToolStripMenuItem_Click(null, null);
+                    }
+                    if (action.Equals("encode_base64"))
+                    {
+                        string inputDir = args[2];
+
+                        foreach (string filePath in BuCommon.listFiles(inputDir))
+                        {
+                            string newName = Path.GetFileName(filePath);
+                            newName= Convert.ToBase64String(Encoding.UTF8.GetBytes(newName));
+                            File.Move(filePath, Path.GetDirectoryName(filePath) + "\\"+ newName);
+                        }
                     }
                     break;
                 case "girls_guild":
