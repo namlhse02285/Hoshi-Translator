@@ -70,7 +70,7 @@ namespace Hoshi_Translator
                 }
                 else if(!commandLine.StartsWith(TransCommon.COMMENT_STR))
                 {
-                    oneCommand.Add(commandLine);
+                    oneCommand.Add(commandLine.Equals("_") ? "" : commandLine);
                 }
             }
             if(oneCommand.Count> 0)
@@ -337,7 +337,11 @@ namespace Hoshi_Translator
                             }
                             else
                             {
-                                File.Copy(inputOneFile, outputDir + "\\" + newName);
+                                try
+                                {
+                                    File.Copy(inputOneFile, outputDir + "\\" + newName);
+                                }
+                                catch { }
                             }
                         }
                     }
@@ -377,13 +381,13 @@ namespace Hoshi_Translator
 
                         foreach (string filePath in BuCommon.listFiles(inputDir))
                         {
-                            if(filePathRegex.Length> 1)
+                            if(filePathRegex.Length> 0)
                             {
                                 if (isAccept && !Regex.IsMatch(filePath, filePathRegex)) { continue; }
                                 if (!isAccept && Regex.IsMatch(filePath, filePathRegex)) { continue; }
                             }
                             string fileFullName = Path.GetFileName(filePath);
-                            if(fileNameRegex.Length> 1)
+                            if(fileNameRegex.Length> 0)
                             {
                                 if (isAccept && !Regex.IsMatch(fileFullName, fileNameRegex)) { continue; }
                                 if (!isAccept && Regex.IsMatch(fileFullName, fileNameRegex)) { continue; }
@@ -623,6 +627,12 @@ namespace Hoshi_Translator
                             }
                             File.WriteAllLines(outputFilePath, importFileContent, encoding);
                         }
+                    }
+                    if (action.Equals("decrypt"))
+                    {
+                        string inputDir = args[2];
+                        string outputDir = args[3];
+                        rpgMVProcessor.decrypt(inputDir, outputDir);
                     }
                     break;
                 case "rpg_vx_ace":

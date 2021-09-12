@@ -833,6 +833,67 @@ namespace Hoshi_Translator.PjProcessor
                 File.WriteAllText(outputPath, new String(arr), encoding);
             }
         }
+        public void decrypt(string inputDir, string outputDir)
+        {
+            Directory.CreateDirectory(outputDir);
+            //Search System.json and get cryptKey
+            byte[] cryptKey= null;
+            foreach (string filePath in BuCommon.listFiles(inputDir))
+            {
+                if (Path.GetFileName(filePath).ToLower().Equals("system.json"))
+                {
+                    StringBuilder fullJsonString = new StringBuilder();
+                    foreach (string aFileLine in File.ReadAllLines(filePath))
+                    {
+                        fullJsonString.Append(aFileLine);
+                    }
+                    JToken jTokenKey = JToken.Parse(fullJsonString.ToString())
+                        .SelectToken(@"encryptionKey");
+
+                    string cryptKeyStr = jTokenKey.ToString();
+                    if (cryptKeyStr.Length == 0) { break; }
+                    cryptKey = new byte[cryptKeyStr.Length/ 2];
+                    for (int i = 0; i < cryptKey.Length; i++)
+                    {
+                        string split = cryptKeyStr.Substring(i * 2, 2);
+                        cryptKey[i] = Convert.ToByte(split, 16);
+                    }
+                    break;
+                }
+            }
+            
+            //Decrypt all file
+            foreach (string filePath in BuCommon.listFiles(inputDir))
+            {
+                string newExt = getSwitchedExtension(filePath);
+                if (newExt.Length == 0) { continue; }
+                byte[] fileByteArr = File.ReadAllBytes(filePath);
+                //Remove fake header of RPGMV
+                fileByteArr = fileByteArr.Skip(16).ToArray();
+                string outputFilePath = outputDir + filePath.Substring(inputDir.Length);
+                Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath));
+                outputFilePath = Path.ChangeExtension(outputFilePath, newExt);
+
+                for (int i = 0; i < Math.Min(cryptKey.Length, 16); i++)
+                {
+                    fileByteArr[i] ^= cryptKey[i];
+                }
+                File.WriteAllBytes(outputFilePath, fileByteArr);
+            }
+        }
+        private string getSwitchedExtension(string input)
+        {
+            if (!input.Contains(".")) { return ""; }
+            string toSwitch = input.Substring(input.LastIndexOf(".")+ 1).ToLower();
+            switch (toSwitch)
+            {
+                case "rpgmvp": return "png";
+                case "rpgmvo": return "ogg";
+                case "rpgmvm": return "m4a";
+            }
+
+            return "";
+        }
 
 
     }
