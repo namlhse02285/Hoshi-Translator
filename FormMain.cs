@@ -258,6 +258,41 @@ namespace Hoshi_Translator
                         TransCommon.updateTranslation(fromFile, fromEncoding,
                             orgLineHeader, transLineHeader, toFile, outputDir, searchFromBegin);
                     }
+                    if (action.Equals("quote_base_on_other"))
+                    {
+                        string inputDir = args[2];
+                        Encoding encoding= BuCommon.getEncodingFromString(args[3].ToLower());
+                        string baseHeader = args[4];
+                        string toQuoteHeader = args[5];
+                        string outputDir = args[6];
+                        Directory.CreateDirectory(outputDir);
+
+                        string baseTemp = "";
+                        string toQuoteTemp = "";
+                        foreach (string fromFilePath in BuCommon.listFiles(inputDir))
+                        {
+                            string[] fileContent = File.ReadAllLines(fromFilePath, encoding);
+                            for (int i = 0; i < fileContent.Length; i++)
+                            {
+                                if (fileContent[i].StartsWith(baseHeader))
+                                {
+                                    baseTemp = fileContent[i].Substring(baseHeader.Length);
+                                    continue;
+                                }
+                                if (fileContent[i].StartsWith(toQuoteHeader))
+                                {
+                                    toQuoteTemp = fileContent[i].Substring(toQuoteHeader.Length);
+                                    if (toQuoteTemp.Length == 0) { continue; }
+                                    fileContent[i]= toQuoteHeader
+                                        + TransCommon.quoteSentenceBaseOnOrg(baseTemp, toQuoteTemp);
+                                    continue;
+                                }
+                            }
+
+                            string outputFile = outputDir + fromFilePath.Substring(inputDir.Length);
+                            File.WriteAllLines(outputFile, fileContent, encoding);
+                        }
+                    }
                     if (action.Equals("wrap"))
                     {
                         string inputDir = args[2];
