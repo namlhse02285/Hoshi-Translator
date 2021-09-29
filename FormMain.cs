@@ -220,7 +220,7 @@ namespace Hoshi_Translator
                         {
                             FileInfo fileInfo = new FileInfo(filePath);
                             sizeCount += fileInfo.Length;
-                            if (sizeCount >= partSize)
+                            if (sizeCount/ 1048576 >= partSize)
                             {
                                 sizeCount = fileInfo.Length;
                                 partCount++;
@@ -941,6 +941,16 @@ namespace Hoshi_Translator
                         string inputFile = args[2];
                         string outputDir = args[3];
                         vinaHoshiProcessor.addKana(inputFile, outputDir);
+                    }
+                    break;
+                case "saku_uta":
+                    SakuUta sakuUta = new SakuUta();
+                    sakuUta.loadDefault(true);
+                    if (action.Equals("import"))
+                    {
+                        string inputFile = args[2];
+                        string outputDir = args[3];
+                        sakuUta.import(inputFile, outputDir);
                     }
                     break;
             }

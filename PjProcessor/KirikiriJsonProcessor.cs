@@ -12,16 +12,16 @@ namespace Hoshi_Translator.PjProcessor
 {
     class KirikiriJsonProcessor : AbstractPjProcessor
     {
-        public static readonly string INFO_JSONPATH_HEAD = "JsonPath";
-        public static readonly string OUTPUT_FILE_EXTENSION = ".txt";
-        public static readonly string SLASH_REPLACE_STRING = "†";
+        private readonly string INFO_JSONPATH_HEAD = "JsonPath";
+        private readonly string OUTPUT_FILE_EXTENSION = ".txt";
+        private readonly string SLASH_REPLACE_STRING = "†";
 
         public override void loadDefault(bool forceReload)
         {
             aInputEncoding = BuCommon.getEncodingFromString("utf-8");
             aMediateEncoding = BuCommon.getEncodingFromString("utf-8");
             aOutputEncoding = BuCommon.getEncodingFromString("utf-8");
-            aWrapFont = new Font("M+ 1m regular", 16);
+            aWrapFont = new Font("MotoyaLMaru", 16);
             aMaxWrap = 620;
             aWrapString = "†r†n";
             base.loadDefault(forceReload);
