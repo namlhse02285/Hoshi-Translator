@@ -352,6 +352,19 @@ namespace Hoshi_Translator
                                 .Select(w => w.Trim().Length== 0 ? 70 : int.Parse(w.Trim())).ToArray()
                             , outputDir);
                     }
+                    if (action.Equals("import_excel_file_to_trans"))
+                    {
+                        OfficeOpenXml.ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+                        string inputDir = args[2];
+                        string toCheckHeaderListStr = args[3];
+                        string toImportHeader = args[4];
+                        string orgDir = args[5];
+                        Encoding encoding = BuCommon.getEncodingFromString(args[6]);
+                        string outputDir = args[7];
+                        TransCommon.importExcelFileToTrans(inputDir,
+                            toCheckHeaderListStr, toImportHeader
+                            , orgDir, encoding, outputDir);
+                    }
                     break;
                 case "file":
                     if (action.Equals("take_out"))
@@ -450,12 +463,51 @@ namespace Hoshi_Translator
                     if (action.Equals("encode_base64"))
                     {
                         string inputDir = args[2];
+                        List<string> allOldFilesPath = new List<string>();
 
                         foreach (string filePath in BuCommon.listFiles(inputDir))
                         {
+                            allOldFilesPath.Add(filePath);
                             string newName = Path.GetFileName(filePath);
                             newName= Convert.ToBase64String(Encoding.UTF8.GetBytes(newName));
-                            File.Move(filePath, Path.GetDirectoryName(filePath) + "\\"+ newName);
+                            File.Copy(filePath, Path.GetDirectoryName(filePath) + "\\"+ newName);
+                        }
+                        foreach (string filePath in allOldFilesPath)
+                        {
+                            File.Delete(filePath);
+                        }
+                    }
+                    if (action.Equals("rename"))
+                    {
+                        string inputDir = args[2];
+                        string fileNameRegex = args[3];
+                        bool deleteSource = args[4].ToLower().Equals("true");
+                        string outputDir = args[5];
+                        Directory.CreateDirectory(outputDir);
+
+                        foreach (string inputOneFile in BuCommon.listFiles(inputDir))
+                        {
+                            string fileDir = Path.GetDirectoryName(inputOneFile);
+                            string fileName = Path.GetFileName(inputOneFile);
+                            if (!Regex.IsMatch(fileName, fileNameRegex)) { continue; }
+
+                            //process
+                            fileName = fileName.Substring(0, 1).ToUpper() + fileName.Substring(1);
+                            Console.WriteLine(fileName);
+
+                            string newPath = Path.Combine(outputDir, fileName);
+                            if (deleteSource)
+                            {
+                                File.Move(inputOneFile, newPath);
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    File.Copy(inputOneFile, newPath);
+                                }
+                                catch { }
+                            }
                         }
                     }
                     break;
@@ -951,6 +1003,22 @@ namespace Hoshi_Translator
                         string inputFile = args[2];
                         string outputDir = args[3];
                         sakuUta.import(inputFile, outputDir);
+                    }
+                    break;
+                case "Sonohana":
+                    SonohanaProcessor sonohana = new SonohanaProcessor();
+                    sonohana.loadDefault(true);
+                    if (action.Equals("export"))
+                    {
+                        string inputFile = args[2];
+                        string outputDir = args[3];
+                        sonohana.export(inputFile, outputDir);
+                    }
+                    if (action.Equals("export2"))
+                    {
+                        string inputFile = args[2];
+                        string outputDir = args[3];
+                        sonohana.export2(inputFile, outputDir);
                     }
                     break;
             }

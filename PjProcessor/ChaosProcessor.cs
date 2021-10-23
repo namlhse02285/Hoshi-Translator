@@ -307,7 +307,8 @@ namespace Hoshi_Translator.PjProcessor
                             orgLine = Int32.Parse(info[TransCommon.INFO_LINE_HEAD])- 1;
                             if (info.ContainsKey(TransCommon.INFO_MODE_HEAD))
                             {
-                                curBox = info[TransCommon.INFO_MODE_HEAD].ToLower();
+                                curBox = info[TransCommon.INFO_MODE_HEAD]
+                                    .ToLower().Replace("@","");
                                 if (curBox.Equals(TransCommon.INFO_MODE_CHARACTER_NAME))
                                 {//Ignore, dont import char name block
                                     break;
@@ -364,7 +365,10 @@ namespace Hoshi_Translator.PjProcessor
                                 sentence = String.Join("", splitSentence);
                             }
                         }
-                        if(curBox.Equals("box00") || curBox.Equals("box01") || curBox.Equals("box10"))
+                        if(curBox.Equals("box00")
+                            || curBox.Equals("box01")
+                            || curBox.Equals("box02")
+                            || curBox.Equals("box10"))
                         {
                             sentence = sentence.Replace("<br>", Environment.NewLine);
                         }

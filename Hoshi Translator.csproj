@@ -85,6 +85,7 @@
     <Compile Include="PjProcessor\RpgMVProcessor.cs" />
     <Compile Include="PjProcessor\SakuUta.cs" />
     <Compile Include="PjProcessor\SiglusProcessor.cs" />
+    <Compile Include="PjProcessor\SonohanaProcessor.cs" />
     <Compile Include="PjProcessor\TyranoProcessor.cs" />
     <Compile Include="PjProcessor\VinaHoshiProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

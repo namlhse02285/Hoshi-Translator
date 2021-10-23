@@ -47,6 +47,80 @@ namespace Hoshi_Translator
             }
             return ret.ToString();
         }
+
+        public static void importExcelFileToTrans(string inputFile, string toCheckHeaderListStr,
+             string toImportHeader, string orgDir, Encoding encoding, string outputDir)
+        {
+            Directory.CreateDirectory(outputDir);
+            List<string> toCheckHeaderList = Regex.Split(toCheckHeaderListStr, ",").ToList();
+            foreach (string filePath in BuCommon.listFiles(inputFile))
+            {
+                ExcelPackage workbook = new ExcelPackage(new FileInfo(filePath));
+                ExcelWorksheet worksheet = workbook.Workbook.Worksheets[
+                    Path.GetFileNameWithoutExtension(filePath)];
+                string orgFilePath = Path.Combine(orgDir,
+                    Path.GetFileNameWithoutExtension(filePath)+ EXPORT_FILE_EXTENSION);
+                if (!File.Exists(orgFilePath)) { continue; }
+                string outputFilePath = Path.Combine(outputDir,
+                    Path.GetFileNameWithoutExtension(filePath)+ EXPORT_FILE_EXTENSION);
+                string importedContent = "";
+
+                Dictionary<string, int> headerMapWithIndex = new Dictionary<string, int>();
+                int tempExcelIndex = 1;
+                int emptyExcelColumnsMax = 5;
+                while (true)
+                {
+                    string headerCellTemp = BuCommon.ExcelColumnIndexToName(tempExcelIndex) + "1";
+                    string excelHeaderTemp = worksheet.Cells[headerCellTemp].Text;
+                    if (excelHeaderTemp.Length == 0)
+                    {
+                        emptyExcelColumnsMax--;
+                        if (emptyExcelColumnsMax < 0) { break; }
+                    }
+                    else
+                    {
+                        headerMapWithIndex.Add(excelHeaderTemp, tempExcelIndex);
+                    }
+                    tempExcelIndex++;
+                }
+
+                List<List<string>> allBlocks = getBlockText(File.ReadAllLines(orgFilePath, encoding));
+                int excelSearchingIndexRow = 2;
+                for (int i = 0; i < allBlocks.Count; i++)
+                {
+                    List<string> outputBlock = allBlocks[i].ToList();
+                    bool found = true;
+                    foreach (string aHeader in toCheckHeaderList)
+                    {
+                        string excelContent = worksheet.Cells[
+                            BuCommon.ExcelColumnIndexToName(headerMapWithIndex[aHeader])
+                                + excelSearchingIndexRow.ToString()].Text;
+                        if (getBlockSingleText(allBlocks[i], aHeader, false)!= excelContent)
+                        {
+                            found = false;
+                            break;
+                        }
+                    }
+                    if (found)
+                    {
+                        for (int j = 0; j < outputBlock.Count; j++)
+                        {
+                            if (outputBlock[j].StartsWith(toImportHeader))
+                            {
+                                string excelContent = worksheet.Cells[
+                                    BuCommon.ExcelColumnIndexToName(headerMapWithIndex[toImportHeader])
+                                        + excelSearchingIndexRow.ToString()].Text;
+                                outputBlock[j] = toImportHeader + excelContent;
+                                break;
+                            }
+                        }
+                    }
+                    importedContent += blockToString(outputBlock);
+                    excelSearchingIndexRow++;
+                }
+                File.WriteAllText(outputFilePath, importedContent, encoding);
+            }
+        }
         public static void convertExportedFileToExcel(string inputFile,
             Encoding encoding, string headerListStr, int[] listColumnWidth, string outputDir)
         {
@@ -62,12 +136,11 @@ namespace Hoshi_Translator
                 workbook.Workbook.Properties.Title = Path.GetFileName(filePath);
                 ExcelWorksheet worksheet = workbook.Workbook.Worksheets.Add(Path.GetFileNameWithoutExtension(filePath));
                 //worksheet.DefaultColWidth = 70;
-                int FIRST_COLUMN_ASCII= Convert.ToInt32('A');
 
-                int cellColumn = FIRST_COLUMN_ASCII;
+                int cellColumn = 1;
                 int cellRow = 1;
                 headerList.ForEach((oneHeader) =>{
-                    worksheet.Cells[Convert.ToChar(cellColumn) + cellRow.ToString()].Value = oneHeader;
+                    worksheet.Cells[BuCommon.ExcelColumnIndexToName(cellColumn) + cellRow.ToString()].Value = oneHeader;
                     cellColumn++;
                 });
                 worksheet.View.FreezePanes(2, 1);
@@ -79,7 +152,7 @@ namespace Hoshi_Translator
                     bool isTakeThisTextOfHeader = false;
                     foreach (string oneBlockLine in oneBlock)
                     {
-                        string tempCell = Convert.ToChar(cellColumn) + cellRow.ToString();
+                        string tempCell = BuCommon.ExcelColumnIndexToName(cellColumn) + cellRow.ToString();
                         Match headerMatch = Regex.Match(oneBlockLine, @"^<.+?>");
                         if (headerMatch.Success)
                         {
@@ -88,8 +161,8 @@ namespace Hoshi_Translator
                             {
                                 if (headerList[i].Equals(headerMatch.Value))
                                 {
-                                    cellColumn = FIRST_COLUMN_ASCII + i;
-                                    tempCell = Convert.ToChar(cellColumn) + cellRow.ToString();
+                                    cellColumn = i + 1;
+                                    tempCell = BuCommon.ExcelColumnIndexToName(cellColumn) + cellRow.ToString();
                                     worksheet.Cells[tempCell].Style.WrapText = true;
                                     worksheet.Cells[tempCell].Value = oneBlockLine.Substring(headerMatch.Length);
                                     isTakeThisTextOfHeader = true;
