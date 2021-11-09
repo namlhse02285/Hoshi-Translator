@@ -510,6 +510,25 @@ namespace Hoshi_Translator
                             }
                         }
                     }
+                    if (action.Equals("set_date_time"))
+                    {
+                        string inputDir = args[2];
+                        int y = Int32.Parse(args[3]);
+                        int m = Int32.Parse(args[4]);
+                        int d = Int32.Parse(args[5]);
+                        int h = Int32.Parse(args[6]);
+                        int min = Int32.Parse(args[7]);
+                        int s = Int32.Parse(args[8]);
+                        int ms = Int32.Parse(args[9]);
+
+                        foreach (string oneFilePath in BuCommon.listFiles(inputDir))
+                        {
+                            File.SetCreationTime(oneFilePath,
+                                new DateTime(y,m,d,h,min,s,ms));
+                            File.SetLastWriteTime(oneFilePath,
+                                new DateTime(y, m, d, h, min, s, ms));
+                        }
+                    }
                     break;
                 case "girls_guild":
                     RpgMVProcessor girlsGuildProcessor = new RpgMVProcessor();
