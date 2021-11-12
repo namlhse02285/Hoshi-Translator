@@ -37,6 +37,7 @@ namespace Hoshi_Translator.PjProcessor
                     if (filteredLine.StartsWith("*")) { continue; }
                     if (filteredLine.StartsWith(";")) { continue; }
                     if (filteredLine.StartsWith("$")) { continue; }
+                    if (filteredLine.StartsWith("@")) { continue; }
                     if (filteredLine.StartsWith("#"))
                     {
                         string charName = filteredLine.Substring(1);

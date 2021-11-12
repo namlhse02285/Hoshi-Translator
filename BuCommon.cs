@@ -79,6 +79,23 @@ namespace Hoshi_Translator
                 return new string[] { filePath };
             }
         }
+        public static string searchOrgFilePath(string transFilePath, string orgFiles)
+        {
+            string orgFilePath = orgFiles;
+            if (!File.Exists(orgFiles))
+            {
+                foreach (string oneOrgPath in BuCommon.listFiles(orgFiles))
+                {
+                    if (Path.GetFileNameWithoutExtension(oneOrgPath).Equals(
+                        Path.GetFileNameWithoutExtension(transFilePath)))
+                    {
+                        orgFilePath = oneOrgPath;
+                        break;
+                    }
+                }
+            }
+            return orgFilePath;
+        }
 
         public static List<KeyValuePair<string, string>> getReplaceList(string replaceRuleFilePath, string REPLACE_SEPARATOR)
         {

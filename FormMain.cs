@@ -1024,7 +1024,7 @@ namespace Hoshi_Translator
                         sakuUta.import(inputFile, outputDir);
                     }
                     break;
-                case "Sonohana":
+                case "sonohana":
                     SonohanaProcessor sonohana = new SonohanaProcessor();
                     sonohana.loadDefault(true);
                     if (action.Equals("export"))
@@ -1038,6 +1038,13 @@ namespace Hoshi_Translator
                         string inputFile = args[2];
                         string outputDir = args[3];
                         sonohana.export2(inputFile, outputDir);
+                    }
+                    if (action.Equals("import"))
+                    {
+                        string inputFiles = args[2];
+                        string orgFiles = args[3];
+                        string outputDir = args[4];
+                        sonohana.import(inputFiles, orgFiles, outputDir);
                     }
                     break;
             }

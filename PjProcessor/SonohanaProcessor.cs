@@ -43,6 +43,13 @@ namespace Hoshi_Translator.PjProcessor
                         orgTempText = orgTempText.Substring(0, orgTempText.Length - 1);
                         continue;
                     }
+                    if (tempLine.StartsWith("    old "))
+                    {
+                        if (tempLine.IndexOf("\"") < 0) { continue; }
+                        orgTempText = tempLine.Substring(tempLine.IndexOf("\"") + 1);
+                        orgTempText = orgTempText.Substring(0, orgTempText.Length - 1);
+                        continue;
+                    }
                     if (tempLine.Equals("    \"\""))
                     {
                         fileContent += TransCommon.TRANS_BLOCK_INFO_HEADER
@@ -114,6 +121,36 @@ namespace Hoshi_Translator.PjProcessor
                 string outputPath = String.Format("{0}\\{1}{2}"
                         , outputDir, Path.GetFileNameWithoutExtension(filePath), TransCommon.EXPORT_FILE_EXTENSION);
                 File.WriteAllText(outputPath, fileContent, aMediateEncoding);
+            }
+        }
+
+        public void import(string transFiles, string orgFiles, string outputDir)
+        {
+            Directory.CreateDirectory(outputDir);
+            foreach (string filePath in BuCommon.listFiles(transFiles))
+            {
+                string orgFilePath = BuCommon.searchOrgFilePath(filePath, orgFiles);
+
+                string[] orgFileContent = File.ReadAllLines(orgFilePath, aInputEncoding);
+                List<List<string>> allTransBlock = TransCommon.getBlockText(
+                    File.ReadAllLines(filePath, aMediateEncoding));
+                foreach (List<string> oneBlock in allTransBlock)
+                {
+                    Dictionary<string, string> transInfo
+                        = TransCommon.getInfoFromString(oneBlock[0]);
+                    string transSentence = TransCommon.getBlockSingleText(oneBlock,
+                        TransCommon.TRANSLATED_LINE_HEAD, false);
+                    int line = int.Parse(transInfo[TransCommon.INFO_LINE_HEAD])- 1;
+                    Match orgSentenceMatch = Regex.Match(orgFileContent[line],
+                        "(?<!\\\\)\".*?(?<!\\\\)\"");
+                    orgFileContent[line]
+                        = orgFileContent[line].Substring(0, orgSentenceMatch.Index+ 1)
+                        + transSentence
+                        + orgFileContent[line].Substring(
+                            orgSentenceMatch.Index+ orgSentenceMatch.Length- 1);
+                }
+                string outputPath = Path.Combine(outputDir, Path.GetFileName(orgFilePath));
+                File.WriteAllLines(outputPath, orgFileContent, aOutputEncoding);
             }
         }
 
