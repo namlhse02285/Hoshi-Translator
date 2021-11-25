@@ -137,10 +137,11 @@ namespace Hoshi_Translator
                 ExcelWorksheet worksheet = workbook.Workbook.Worksheets.Add(Path.GetFileNameWithoutExtension(filePath));
                 //worksheet.DefaultColWidth = 70;
 
-                int cellColumn = 1;
+                int cellColumn = 0;
                 int cellRow = 1;
                 headerList.ForEach((oneHeader) =>{
-                    worksheet.Cells[BuCommon.ExcelColumnIndexToName(cellColumn) + cellRow.ToString()].Value = oneHeader;
+                    worksheet.Cells[BuCommon.ExcelColumnIndexToName(cellColumn)
+                        + cellRow.ToString()].Value = oneHeader;
                     cellColumn++;
                 });
                 worksheet.View.FreezePanes(2, 1);
@@ -152,7 +153,7 @@ namespace Hoshi_Translator
                     bool isTakeThisTextOfHeader = false;
                     foreach (string oneBlockLine in oneBlock)
                     {
-                        string tempCell = BuCommon.ExcelColumnIndexToName(cellColumn) + cellRow.ToString();
+                        string tempCell= "A2";
                         Match headerMatch = Regex.Match(oneBlockLine, @"^<.+?>");
                         if (headerMatch.Success)
                         {
@@ -161,8 +162,7 @@ namespace Hoshi_Translator
                             {
                                 if (headerList[i].Equals(headerMatch.Value))
                                 {
-                                    cellColumn = i + 1;
-                                    tempCell = BuCommon.ExcelColumnIndexToName(cellColumn) + cellRow.ToString();
+                                    tempCell = BuCommon.ExcelColumnIndexToName(i) + cellRow.ToString();
                                     worksheet.Cells[tempCell].Style.WrapText = true;
                                     worksheet.Cells[tempCell].Value = oneBlockLine.Substring(headerMatch.Length);
                                     isTakeThisTextOfHeader = true;

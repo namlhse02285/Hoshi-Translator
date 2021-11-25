@@ -170,9 +170,12 @@ namespace Hoshi_Translator.PjProcessor
                     if (!tempMatch.Success) { continue; }
                     string lineHead = tempMatch.Value;
                     string sentence = fileContent[i].Substring(lineHead.Length);
-                    sentence = TransCommon.formatJpSentence(sentence,
-                        fileContent[i- 1].Substring(lineHead.Length+ 2));
-                    sentence = textSizeWrap(sentence, aWrapFont, aMaxWrap, aWrapString, null, out _);
+                    sentence = TransCommon.quoteSentenceBaseOnOrg(
+                        fileContent[i- 1].Substring(lineHead.Length+ 2), sentence);
+                    if (!sentence.Contains(aWrapString))
+                    {
+                        sentence = textSizeWrap(sentence, aWrapFont, aMaxWrap, aWrapString, null, out _);
+                    }
                     fileContent[i] = lineHead + sentence;
                 }
                 string outputFilePath = String.Format("{0}\\{1}", outputDir, Path.GetFileName(filePath));
