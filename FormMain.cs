@@ -94,11 +94,34 @@ namespace Hoshi_Translator
                         //string sentence = "人を食らう化け物に全てを奪われたあのとき、あたしはヴァンパイアハンターになることを決意した。闘うことが唯一の正義だと信じて。";
                         //WebRequest request = WebRequest.Create("https://ichi.moe/cl/qr/?q=" + sentence + "&r=htr");
                         //request.Credentials = CredentialCache.DefaultCredentials;
-                        bool testBool = false;
-                        bool testBool2 = false;
-                        testBool2 = (testBool = !testBool);
-                        Debug.WriteLine(""+ testBool);
-                        Debug.WriteLine(""+ testBool2);
+                        string inputDir = args[2];
+                        string outputDir = args[3];
+
+                        string exportContent = "";
+                        Directory.CreateDirectory(outputDir);
+                        foreach (string fromFilePath in BuCommon.listFiles(inputDir))
+                        {
+                            string[] fileContent = File.ReadAllLines(fromFilePath, 
+                                BuCommon.getEncodingFromString("utf-8-bom"));
+                            exportContent = "";
+                            Match tempMatch;
+                            for (int i = 0; i < fileContent.Length; i++)
+                            {
+                                tempMatch = Regex.Match(fileContent[i], @"//<\d+?> ");
+                                if (tempMatch.Success)
+                                {
+                                    string content= fileContent[i].Substring(tempMatch.Length);
+                                    if (SiglusProcessor.getConvertedCharName(content) != null) { continue; }
+                                    exportContent += content;
+                                    exportContent += Environment.NewLine;
+                                    exportContent += Environment.NewLine;
+                                }
+                            }
+
+                            string outputFilePath = String.Format("{0}\\{1}", outputDir, Path.GetFileName(fromFilePath));
+                            File.WriteAllText(outputFilePath, exportContent,
+                                BuCommon.getEncodingFromString("utf-8-bom"));
+                        }
                     }
                     if (action.Equals("font_list"))
                     {
@@ -480,20 +503,20 @@ namespace Hoshi_Translator
                     if (action.Equals("rename"))
                     {
                         string inputDir = args[2];
-                        string fileNameRegex = args[3];
-                        bool deleteSource = args[4].ToLower().Equals("true");
-                        string outputDir = args[5];
+                        string nameFilterRegex = args[3];
+                        string replaceToName = args[4];
+                        bool deleteSource = args[5].ToLower().Equals("true");
+                        string outputDir = args[6];
                         Directory.CreateDirectory(outputDir);
 
                         foreach (string inputOneFile in BuCommon.listFiles(inputDir))
                         {
-                            string fileDir = Path.GetDirectoryName(inputOneFile);
+                            //string fileDir = Path.GetDirectoryName(inputOneFile);
                             string fileName = Path.GetFileName(inputOneFile);
-                            if (!Regex.IsMatch(fileName, fileNameRegex)) { continue; }
+                            if (!Regex.IsMatch(fileName, nameFilterRegex)) { continue; }
 
                             //process
-                            fileName = fileName.Substring(0, 1).ToUpper() + fileName.Substring(1);
-                            Console.WriteLine(fileName);
+                            fileName = Regex.Replace(fileName, nameFilterRegex, replaceToName);
 
                             string newPath = Path.Combine(outputDir, fileName);
                             if (deleteSource)
