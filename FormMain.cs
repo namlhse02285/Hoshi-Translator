@@ -325,14 +325,17 @@ namespace Hoshi_Translator
                         string configFilePath= args.Length > 6 ? args[6] : AppConst.CONFIG_FILE;
                         TransCommon.wrap(inputDir, encoding, lineFilterRegex, configFilePath, outputDir);
                     }
-                    if (action.Equals("single_take_out_diff_filtered_line"))
+                    if (action.Equals("get_filtered_line"))
                     {
                         string fromFilePath = args[2];
                         Encoding encoding = BuCommon.getEncodingFromString(args[3]);
                         string filterRegex= args[4];
                         string takeOutRegex= args[5];
-                        string outputFile = args.Length > 6 ? args[6] : AppConst.OUTPUT_FILE;
+                        bool useDiff= args[6].ToLower().Equals("true");
+                        string outputFile = args[7];
                         List<string> outputContent = new List<string>();
+
+                        Directory.CreateDirectory(outputFile);
                         foreach (string oneFilePath in BuCommon.listFiles(fromFilePath))
                         {
                             string[] fileContent = File.ReadAllLines(oneFilePath, encoding);
@@ -343,23 +346,21 @@ namespace Hoshi_Translator
                                 if (Regex.IsMatch(line, filterRegex))
                                 {
                                     string toTakeOut = Regex.Match(line, takeOutRegex).Value;
-                                    if (null!= toTakeOut && toTakeOut.Length> 0
-                                        && !outputContent.Contains(toTakeOut))
-                                    {
-                                        outputContent.Add(toTakeOut);
-                                    }
+                                    if (null == toTakeOut || toTakeOut.Length== 0) { continue; }
+                                    if (useDiff && outputContent.Contains(toTakeOut)) { continue; }
+                                    outputContent.Add(toTakeOut);
                                 }
                             }
-                            if (!File.Exists(outputFile))
+                            if (outputFile.Length> 0)
                             {
                                 String outputFilePath = outputFile + "\\" + Path.GetFileName(oneFilePath);
                                 File.WriteAllLines(outputFilePath, outputContent, encoding);
                                 outputContent.Clear();
                             }
                         }
-                        if (File.Exists(outputFile))
+                        if (outputFile.Length== 0)
                         {
-                            File.WriteAllLines(outputFile, outputContent, encoding);
+                            File.WriteAllLines(AppConst.OUTPUT_FILE, outputContent, encoding);
                         }
                     }
                     if (action.Equals("convert_exported_file_to_excel"))

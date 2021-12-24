@@ -47,14 +47,7 @@ namespace Hoshi_Translator.PjProcessor
                         }
                         continue;
                     }
-                    if (inputs[i].EndsWith("[r]"))
-                    {
-                        isConcat = true;
-                    }
-                    if (inputs[i].EndsWith("[p]"))
-                    {
-                        isConcat = false;
-                    }
+                    isConcat = inputs[i].EndsWith("[r]");
                     if(filteredLine.StartsWith("_　"))
                     {
                         filteredLine = filteredLine.Substring("_　".Length);
