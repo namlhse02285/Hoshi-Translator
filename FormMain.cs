@@ -335,7 +335,7 @@ namespace Hoshi_Translator
                         string outputFile = args[7];
                         List<string> outputContent = new List<string>();
 
-                        Directory.CreateDirectory(outputFile);
+                        if (outputFile.Length > 0) { Directory.CreateDirectory(outputFile); }
                         foreach (string oneFilePath in BuCommon.listFiles(fromFilePath))
                         {
                             string[] fileContent = File.ReadAllLines(oneFilePath, encoding);
