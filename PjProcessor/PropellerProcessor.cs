@@ -8,16 +8,16 @@ using System.Text.RegularExpressions;
 
 namespace Hoshi_Translator.PjProcessor
 {
-    class TyranoProcessor : AbstractPjProcessor
+    class PropellerProcessor : AbstractPjProcessor
     {
         public override void loadDefault(bool forceReload)
         {
-            aInputEncoding = BuCommon.getEncodingFromString("utf-8");
+            aInputEncoding = BuCommon.getEncodingFromString("shift-jis");
             aMediateEncoding = BuCommon.getEncodingFromString("utf-8");
-            aOutputEncoding = BuCommon.getEncodingFromString("utf-8");
+            aOutputEncoding = BuCommon.getEncodingFromString("shift-jis");
             aWrapFont = new Font("MotoyaLMaru", 16);
             aMaxWrap = 63;
-            aWrapString = "[r]\n";
+            aWrapString = "_r";
             base.loadDefault(forceReload);
         }
 
@@ -29,33 +29,29 @@ namespace Hoshi_Translator.PjProcessor
             {
                 string[] inputs = File.ReadAllLines(filePath, aInputEncoding);
                 string output = "";
-                bool isConcat = false;
                 for (int i = 0; i < inputs.Length; i++)
                 {
-                    string filteredLine = Regex.Replace(inputs[i], @"\[.+?\]","").Trim();
-                    if (filteredLine.Length== 0) { continue; }
-                    if (filteredLine.StartsWith("*")) { continue; }
-                    if (filteredLine.StartsWith(";")) { continue; }
-                    if (filteredLine.StartsWith("$")) { continue; }
-                    if (filteredLine.StartsWith("@")) { continue; }
-                    if (filteredLine.StartsWith("#"))
-                    {
-                        string charName = filteredLine.Substring(1);
-                        output += charName + Environment.NewLine;
-                        continue;
-                    }
-                    isConcat = inputs[i].EndsWith("[r]");
-                    if(filteredLine.StartsWith("_　"))
-                    {
-                        filteredLine = filteredLine.Substring("_　".Length);
-                    }
+                    string filteredLine = inputs[i];
+                    if (filteredLine.Length == 0) { continue; }
+                    Match txtMatch = Regex.Match(filteredLine, "05 00 \\[.+?\"(.+?)\"");
+                    if (!txtMatch.Success) { continue; }
 
-                    output += filteredLine + (isConcat ? "" : (Environment.NewLine+ Environment.NewLine));
+                    string txt = txtMatch.Groups[1].Value;
+                    string charName = Regex.Match(txt, "【.+】").Value;
+                    if(charName.Length> 0)
+                    {
+                        output += charName + Environment.NewLine;
+                        output += txt.Substring(charName.Length) + Environment.NewLine + Environment.NewLine;
+                    }
+                    else
+                    {
+                        output += txt + Environment.NewLine + Environment.NewLine;
+                    }
                 }
                 if (output.Length > 0)
                 {
                     output += Environment.NewLine + Environment.NewLine;
-                    String outputFile = outputDir + "\\" + Path.GetFileNameWithoutExtension(filePath)+ ".txt";
+                    String outputFile = outputDir + "\\" + Path.GetFileName(filePath);
                     File.WriteAllText(outputFile, output, aMediateEncoding);
                 }
             }

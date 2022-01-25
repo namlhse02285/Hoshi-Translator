@@ -1071,6 +1071,16 @@ namespace Hoshi_Translator
                         sonohana.import(inputFiles, orgFiles, outputDir);
                     }
                     break;
+                case "propeller":
+                    PropellerProcessor propellerProcessor = new PropellerProcessor();
+                    propellerProcessor.loadDefault(true);
+                    if (action.Equals("simple_export"))
+                    {
+                        string inputFile = args[2];
+                        string outputDir = args[3];
+                        propellerProcessor.simpleExport(inputFile, outputDir);
+                    }
+                    break;
             }
         }
         private void saveProperty()

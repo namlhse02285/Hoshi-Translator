@@ -81,6 +81,7 @@
     <Compile Include="PjProcessor\ChaosProcessor.cs" />
     <Compile Include="PjProcessor\KirikiriJsonProcessor.cs" />
     <Compile Include="PjProcessor\KirikiriProcessor.cs" />
+    <Compile Include="PjProcessor\PropellerProcessor.cs" />
     <Compile Include="PjProcessor\RpgVxAceProcessor.cs" />
     <Compile Include="PjProcessor\RpgMVProcessor.cs" />
     <Compile Include="PjProcessor\SakuUta.cs" />
