@@ -66,7 +66,7 @@ namespace Hoshi_Translator
                 string importedContent = "";
 
                 Dictionary<string, int> headerMapWithIndex = new Dictionary<string, int>();
-                int tempExcelIndex = 1;
+                int tempExcelIndex = 0;
                 int emptyExcelColumnsMax = 5;
                 while (true)
                 {
@@ -92,9 +92,16 @@ namespace Hoshi_Translator
                     bool found = true;
                     foreach (string aHeader in toCheckHeaderList)
                     {
-                        string excelContent = worksheet.Cells[
+                        string excelContent = String.Empty;
+                        try{
+                            excelContent = worksheet.Cells[
                             BuCommon.ExcelColumnIndexToName(headerMapWithIndex[aHeader])
                                 + excelSearchingIndexRow.ToString()].Text;
+                        } catch(KeyNotFoundException) {
+                            excelContent = "key_not_found";
+                            found = false;
+                            continue;
+                        }
                         if (getBlockSingleText(allBlocks[i], aHeader, false)!= excelContent)
                         {
                             found = false;
